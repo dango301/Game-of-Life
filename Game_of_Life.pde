@@ -3,7 +3,6 @@ float res = 20; //dimensions of each cell in px //rename to resolution in the en
 float margin = 8;  // margin on each side of the screen
 float maxHz = 2500;
 float gridWeight = .1; // min of .01 to prevent strange behaviour
-//TODO: print keys for user to press
 
 int cols = -1;
 int rows = -1;
