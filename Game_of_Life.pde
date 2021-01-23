@@ -1,5 +1,5 @@
 // User Variables
-float res = 20; //dimensions of each cell in px //rename to resolution in the end
+float res = 10; //dimensions of each cell in px //rename to resolution in the end
 float margin = 8;  // margin on each side of the screen
 float maxHz = 2500;
 float gridWeight =.25; // min of .01 to prevent strange behaviour
@@ -24,8 +24,8 @@ long gen = 0;
 
 
 void setup() {
-    size(800, 600);
-    //fullScreen(1);
+    // size(800, 600);
+    fullScreen(1);
     //throw error if min. width: 800px for buttons or min height for one row isnt enough (dont forget margins)
     surface.setTitle("\"The Game of Life\" by Dennis Paust  © 2021");
     //surface.setResizable(true);
@@ -33,11 +33,16 @@ void setup() {
     frameRate(120);
     
     println("============================================================================");
-    println("Keyboard inputs for User:");
+    println("Keyboard / Mouse inputs for the User:");
+    println("Click with the left mouse button on a cell make it live.");
+    println("Click with the right mouse button on a cell make it dead.");
+    println();
+    println("Click with the mouse wheel on a cell to have its coordinates printed out.");
     println("Press space to pause / unpause the game");
-    println("Press n to only evolve one generation at a time");
-    println("Press g to get current Generaation");
     println("Press f for current frame rate");
+    println("Press g to get current Generaation");
+    println("Press n (for next) to only evolve one generation at a time");
+    println("Press q to quit the game.");
     println("============================================================================");
     println();
     println();
@@ -125,11 +130,14 @@ void draw() {
 void keyPressed() {
     if (key == ' ') toggleLoop();
     else if (key == 'f') println(frameRate);
-    else if (key == 't');
     else if (key == 'g') println("Generation: " + gen);
     else if (key == 'n') {
         toggleLoop(false);
         nextGeneration();
+    }
+    else if (key == 'q') {
+        println("User ended Game after " + gen + " Generations.");
+        exit();
     }
 }
 
@@ -140,6 +148,13 @@ void mouseMoved() {
 }
 
 void mousePressed() {
+    
+    if (mouseButton == CENTER) {
+        int i = floor((mouseX - offsetX) / res);
+        int j = floor((mouseY - offsetY - 40) / res);
+        println("Cell:", i, j);
+        return;
+    }
     
     if (mouseY <= 40) {
         

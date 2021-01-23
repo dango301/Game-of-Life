@@ -7,10 +7,9 @@ void nextGeneration() {
     for (int i = 0; i < cols; i++) {
         for (int j = 0; j < rows; j++) {
             // clone to transfer properties of original Cell-Object to a new one as not to modify any Cells in the original grid while its values are still needed
-            Cell clone = grid[i][j].clone();
+            Cell clone = grid[i][j].clone().transition();
             nextGrid[i][j] = clone;
-            clone.transition();
-            clone.display(); // note: for some reason all cells are only drawn at once, after the loop is done
+            clone.display();// note: for some reason all cells are only drawn at once, after the loop is done
         }
     }
     
@@ -144,14 +143,13 @@ void drawInitialGrid(boolean dragged) {
     int j = floor((mouseY - offsetY - 40) / res);
     if (i >= cols || j >= rows) return;
     
-    Cell c = grid[i][j];
-    c.alive = mouseButton == LEFT;
+    Cell c = new Cell(mouseButton == LEFT, i, j);
+    grid[i][j] = c;
     c.display();
 }
 
 void toggleLoop(boolean...forcedState) {
     isLooping = forcedState.length > 0 ? forcedState[0] : !isLooping;
-    //println(isLooping);
     fill(0);
     rect(240, 0, 120, 40);
     fill(255);

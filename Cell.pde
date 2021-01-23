@@ -1,3 +1,5 @@
+
+
 class Cell {
     boolean alive;
     int x;
@@ -37,7 +39,7 @@ class Cell {
     
     
     //called from nextGeneration() and includes ruleset for each cell type 
-    void transition() {
+    Cell transition() {
         Cell[] nbs = getNeighbours(x, y);
         int sum = 0;
         
@@ -45,9 +47,12 @@ class Cell {
             sum +=nbs[i].alive ? 1 : 0;
         }
         
-        // RULES of the Game of Life (standard rules for a cell)
+        // RULES (standard)
         if (!alive && sum == 3) alive = true;
-        elseif (alive && (sum < 2 || sum > 3)) alive = false;
+        else if (alive && (sum < 2 || sum > 3)) alive = false;
+
+
+        return this;
     }
     
     
