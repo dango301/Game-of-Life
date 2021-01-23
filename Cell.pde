@@ -1,5 +1,3 @@
-// HELLO this is variation branch
-
 class Cell {
   boolean alive;
   int x;
@@ -45,7 +43,6 @@ class Cell {
 
     for (int i = 0; i < nbs.length; i++) {
       sum += nbs[i].alive ? 1 : 0;
-      //String c = this.getClass().getSimpleName();
     }
 
     // RULES of the Game of Life (standard rules for a cell)
