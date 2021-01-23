@@ -1,4 +1,4 @@
-# Convay's Game of Life
+# Conway's Game of Life
 ##### written in Processing (Version 3.5.4)
 
 
