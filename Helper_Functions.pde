@@ -118,6 +118,7 @@ void slider(boolean allowOverflow) {
     fill(0);
     rect(480, 0, width, 40);
     fill(255);
+    textSize(20);
     text("Speed:", 480, 0, 120, 40);
     rect(600, 18, width - 720, 4, 4);
     text(nf(hz, 0, 2) + "Hz", width - 120, 0, 120, 40);
@@ -150,8 +151,11 @@ void drawInitialGrid(boolean dragged) {
 
 void toggleLoop(boolean...forcedState) {
     isLooping = forcedState.length > 0 ? forcedState[0] : !isLooping;
+
     fill(0);
     rect(240, 0, 120, 40);
+    
     fill(255);
+    textSize(20);
     text(isLooping ? "Pause" : "Play", 240, 0, 120, 40);
 }

@@ -1,5 +1,5 @@
 // User Variables
-float res = 10; //dimensions of each cell in px //rename to resolution in the end
+float res = 20; //dimensions of each cell in px //rename to resolution in the end
 float margin = 8;  // margin on each side of the screen
 float maxHz = 2500;
 float gridWeight =.25; // min of .01 to prevent strange behaviour
