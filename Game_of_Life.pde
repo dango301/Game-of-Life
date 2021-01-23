@@ -136,8 +136,7 @@ void keyPressed() {
         nextGeneration();
     }
     else if (key == 'q') {
-        println("Generation: " + gen);
-        println("User ended Game.");
+        println("User ended Game after " + g + " Generations.");
         exit();
     }
 }
