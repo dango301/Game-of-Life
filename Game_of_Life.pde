@@ -1,4 +1,4 @@
-// User Variables //<>//
+// User Variables //<>// //<>// //<>//
 float res = 20; //dimensions of each cell in px //rename to resolution in the end
 float margin = 8;  // margin on each side of the screen
 float maxHz = 2500;
@@ -13,14 +13,16 @@ Cell[][] nextGrid;
 
 float T;
 boolean isLooping = false;
+boolean isSliding = false;
+boolean isPainting = false;
 boolean forceDraw = false;
 long lastCall = 0;
 long gen = 0;
 
 
 void setup() {
-  size(800, 600);
-  //fullScreen(1);
+  //size(800, 600);
+  fullScreen(1);
   //throw error if min. width: 800px for buttons or min height for one row isnt enough (dont forget margins)
   surface.setTitle("\"The Game of Life\" by Dennis Paust  © 2021");
   //surface.setResizable(true);
@@ -117,6 +119,17 @@ void draw() {
 
 
 
+void keyPressed() {
+  if (key == ' ') toggleLoop();
+  else if (key == 'f') println(frameRate);
+  else if (key == 't') ;
+  else if (key == 'g') println("Generation: " + gen);
+  else if (key == 'n') {
+    toggleLoop(false);
+    nextGeneration();
+  }
+}
+
 
 
 void mouseMoved() {
@@ -154,50 +167,15 @@ void mousePressed() {
       slider(false);
   }
 
-  drawInitialGrid();
+  drawInitialGrid(false);
 }
-
-
-
-void keyPressed() {
-  if (key == ' ') toggleLoop();
-  else if (key == 'f') println(frameRate);
-  else if (key == 't') ;
-  else if (key == 'g') println("Generation: " + gen);
-  else if (key == 'n') {
-    toggleLoop(false);
-    nextGeneration();
-  }
-}
-
-
 
 void mouseDragged() {
   slider(true);
-  drawInitialGrid();
+  drawInitialGrid(true);
 }
 
-
-
-void slider(boolean allowOverflow) {
-
-  if (mouseY > 40) return;
-  float x = mouseX;
-  if (!allowOverflow && !(x >= 600 && x <= width - 120)) return;
-  if (x < 480) return;
-
-  x = constrain(x, 600, width - 120);
-  float p = map(x, 600, width - 120, 0, 1);
-  float hz = pow(10, p * log(maxHz) / log(10)); // power with base 10 with maximal exponent such as to reach maxHz for p=1 
-  T = 1000 / hz;
-  //println(hz, T);
-
-  noStroke();
-  fill(0);
-  rect(480, 0, width, 40);
-  fill(255);
-  text("Speed:", 480, 0, 120, 40);
-  rect(600, 18, width - 720, 4, 4);
-  text(nf(hz, 0, 2) + "Hz", width - 120, 0, 120, 40);
-  ellipse(600 + p * (width - 720), 20, 10, 10);
+void mouseReleased() {
+  isSliding = false;
+  isPainting = false;
 }

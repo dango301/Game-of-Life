@@ -9,6 +9,15 @@ class Cell {
     this.y = y;
   }
 
+  //called from nextGeneration() to transfer properties of original Cell-Object to a new one as not to modify any Cells in the original grid while its values are still needed 
+  Cell clone() {
+    return new Cell(alive, x, y);
+  }
+
+
+  String className() {
+    return this.getClass().getSimpleName();
+  }
 
   Cell[] getNeighbours(int x, int y) {
     Cell[] res = new Cell[8];
@@ -43,12 +52,6 @@ class Cell {
   }
 
 
-  //called from nextGeneration() to transfer properties of Cell-Object from nextGrid to grid 
-  void adopt(Cell newCell) {
-    //take on new properties:
-
-    alive = newCell.alive;
-  }
 
   void display() {
     fill(alive ? 0: 255);
@@ -57,4 +60,12 @@ class Cell {
     rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
   }
 }
-// for now a Cell Object only holds information about it being alive or dead, later it might have sub classes like predetor, prey, etc.
+
+
+// At the moment, the Cell class only keeps track of the state alive / dead.
+// To add further sub-classes they must extend the super, Cell
+
+// In each sub-class one can override three methods: clone, transition and display
+// clone method: return an identical object as a copy by simply instantiating one of the SAME type with all of the objects same properties
+// transition method: this is where you may implement customized rulesets; use getNeighbours to base rules on surrounding cells; use the className-method on neighbours to create different rules for different classes
+// display method: make changes to how the objects should be drawn; appearance may be based on custom class properties to make the cells more expressive visually   

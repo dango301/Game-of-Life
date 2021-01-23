@@ -1,31 +1,22 @@
 
 
 void nextGeneration() {
-
-  for (int i = 0; i < cols; i++) {
-    for (int j = 0; j < rows; j++) {
-      nextGrid[i][j].adopt(grid[i][j]);
-    }
-  }
+  nextGrid = new Cell[cols][rows];
 
 
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
 
-      Cell newC = nextGrid[i][j];
-      newC.transition();
-      newC.display(); // note: for some reason all cells are only drawn at once, after the loop is done
+      // clone to transfer properties of original Cell-Object to a new one as not to modify any Cells in the original grid while its values are still needed
+      Cell clone = grid[i][j].clone();
+      nextGrid[i][j] = clone;
+      clone.transition();
+      clone.display(); // note: for some reason all cells are only drawn at once, after the loop is done
     }
   }
 
 
-  //this loop is ESSENTIAL! grid = newGrid does not work, propably because of 2D Array ==> every item has to be reassigned!
-  for (int i = 0; i < cols; i++) {
-    for (int j = 0; j < rows; j++) {
-      grid[i][j].adopt(nextGrid[i][j]);
-    }
-  }
-
+  grid = nextGrid;
   gen++;
 }
 
@@ -109,11 +100,38 @@ void fileExported(File selection) {
 
 
 
+void slider(boolean allowOverflow) {
 
-void drawInitialGrid() {
+  if (isPainting) return;
+  if (!allowOverflow) isSliding = true;
 
-  if (!(mouseX >= offsetX && mouseX <= width - offsetX && mouseY >= offsetY + 40 && mouseY <= height - offsetY))
-    return;
+  float x = mouseX;
+  if (!allowOverflow && !(x >= 600 && x <= width - 120)) return;
+  if (x < 480) return;
+
+  x = constrain(x, 600, width - 120);
+  float p = map(x, 600, width - 120, 0, 1);
+  float hz = pow(10, p * log(maxHz) / log(10)); // power with base 10 with maximal exponent such as to reach maxHz for p=1 
+  T = 1000 / hz;
+  //println(hz, T);
+
+  noStroke();
+  fill(0);
+  rect(480, 0, width, 40);
+  fill(255);
+  text("Speed:", 480, 0, 120, 40);
+  rect(600, 18, width - 720, 4, 4);
+  text(nf(hz, 0, 2) + "Hz", width - 120, 0, 120, 40);
+  ellipse(600 + p * (width - 720), 20, 10, 10);
+}
+
+
+
+void drawInitialGrid(boolean dragged) {
+
+  if (isSliding) return;
+  if (!dragged) isPainting = true;
+  if (!(mouseX >= offsetX && mouseX <= width - offsetX && mouseY >= offsetY + 40 && mouseY <= height - offsetY)) return;
 
   if (isLooping) {
     toggleLoop(false);
