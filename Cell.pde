@@ -1,3 +1,6 @@
+float infectionProb = 0.01;
+float transferProb = 0.75;
+float deathProb = 0.66;
 
 
 class Cell {
@@ -42,16 +45,30 @@ class Cell {
     Cell transition() {
         Cell[] nbs = getNeighbours(x, y);
         int sum = 0;
+        int infectionSum = 0;
         
         for (int i = 0; i < nbs.length; i++) {
-            sum +=nbs[i].alive ? 1 : 0;
+            Cell c = nbs[i];
+            sum += c.alive ? 1 : 0;
+            String n = c.className();
+            
+            if (alive && random(1) < transferProb) {
+                if (n.equals("Infected") && (c.x == x || c.y == y)) infectionSum += ((Infected)c).dur; // only infected by directly adjacent neighbours
+                else if (n.equals("Carcass")) infectionSum += ((Carcass)c).dur;
+            }
+            
         }
         
         // RULES
         if (!alive && sum == 3) alive = true;
-        else if (alive && (sum < 2 || sum > 3)) alive = false;
+        else if (alive && (sum < 2 || sum > 4)) alive = false;
         
-        if (alive && random(1) < 0.1) return new Infected(true, x, y, 1);
+        if (alive && infectionSum > 0)
+            return new Infected(true, x, y, infectionSum);
+        if (alive && random(1) < infectionProb)
+            return new Infected(true, x, y, 4);
+        
+        
         return this;
     }
     
@@ -91,47 +108,31 @@ class Infected extends Cell {
     }
     
     Cell transition() {
+        
         Cell[] nbs = getNeighbours(x, y);
         int sum = 0;
         
         for (int i = 0; i < nbs.length; i++) {
-            sum +=nbs[i].alive ? 1 : 0;
-        }
-        
-        if (alive && (sum < 2 || sum > 3)) return new Carcass(false, x, y, 2);
-        
-        println();
-        println(x, y);
-        for (int i = 0; i < nbs.length; i++) {
             Cell c = nbs[i];
+            sum += c.alive ? 1 : 0;
             String n = c.className();
             
-            if (c.alive && (c.x == x || c.y == y)) {
-                println(c.x, c.y);
-                if (n == "Infected") {
-                    Infected cc = (Infected)c.clone();
-                    cc.dur = cc.dur + 2;
-                    cc.maxDur = max(cc.maxDur, cc.dur);
-                    if (i < 4) // assuming you get 8 surrounding neighbours
-                        nextGrid[c.x][c.y] = cc;
-                    else 
-                        grid[c.x][c.y] = cc;
-                }
-                else if (n == "Cell") {
-                    Infected cc = new Infected(true, c.x, c.y, dur);
-                    if (i < 4) // assuming you get 8 surrounding neighbours
-                        nextGrid[c.x][c.y] = cc;
-                    else 
-                        grid[c.x][c.y] = cc;
-                }
+            // infection is exacerbated by other infected cells or carcasses
+            if (random(1) < transferProb) {
+                if (n.equals("Infected") && (c.x == x || c.y == y)) dur -= ((Infected)c).dur;
+                else if (n.equals("Carcass")) dur -= ((Carcass)c).dur;
             }
-        }
+        }        
         
         dur = max(0, dur - 1);
-        if (dur == 0) { //at end of inction period cell either dies and leaves carcass or lives as normal cell
-            if (alive && random(1) < 0.1) return new Carcass(false, x, y, 2);
+        if (dur == 0) { //at end of infection period cell either dies and leaves carcass or lives as normal cell
+            if (random(1) < deathProb) return new Carcass(false, x, y, 1); // perhaps base propabilty to severity of infection (maxDur)
             else return new Cell(true, x, y);
         }
+        
+        // standard rule: dies if not exactly three live neighbours
+        if (alive && (sum < 2 || sum > 4)) return new Carcass(false, x, y, 1); // leaves infectious carcass if not healed before death
+        
         
         return this;
     }
@@ -163,34 +164,10 @@ class Carcass extends Cell {
     }
     
     Cell transition() {
-        Cell[] nbs = getNeighbours(x, y);
-        
-        for (int i = 0; i < nbs.length; i++) {
-            Cell c = nbs[i];
-            String n = c.className();
-            
-            if (c.alive) {
-                if (n == "Infected") {
-                    Infected cc = (Infected)c.clone();
-                    cc.dur = cc.dur + 2;
-                    cc.maxDur = max(cc.maxDur, cc.dur);
-                    if (i < 4) // assuming you get 8 surrounding neighbours
-                        nextGrid[c.x][c.y] = cc;
-                    else 
-                        grid[c.x][c.y] = cc;
-                    
-                }  else if (n == "Cell") {
-                    Infected cc = new Infected(true, c.x, c.y, 1);
-                    if (i < 4) // assuming you get 8 surrounding neighbours
-                        nextGrid[c.x][c.y] = cc;
-                    else 
-                        grid[c.x][c.y] = cc;
-                }
-            }
-        }
         
         dur = max(0, dur - 1);
         if (dur == 0) return new Cell(false, x, y);
+        
         
         return this;
     }

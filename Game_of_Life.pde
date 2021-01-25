@@ -1,5 +1,5 @@
 // User Variables
-float res = 20; //dimensions of each cell in px //rename to resolution in the end
+float res = 15; //dimensions of each cell in px //rename to resolution in the end
 float margin = 8;  // margin on each side of the screen
 float maxHz = 2500;
 float gridWeight =.25; // min of .01 to prevent strange behaviour
@@ -24,8 +24,8 @@ long gen = 0;
 
 
 void setup() {
-    // size(800, 600);
-    fullScreen(1);
+    size(800, 600);
+    // fullScreen(1);
     //throw error if min. width: 800px for buttons or min height for one row isnt enough (dont forget margins)
     surface.setTitle("\"The Game of Life\" by Dennis Paust  © 2021");
     //surface.setResizable(true);
