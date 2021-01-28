@@ -2,7 +2,7 @@
 ## Virus Variation
 ##### written in Processing (Version 3.5.4)
 
-This is an example of the Game of Life with altered rules and additional cell types. It introduces two new cell types: _Infected_ and _Carcass_, which both carry a virus in this model.
+This is an example of the Game of Life with altered rules and two additional cell types: _Infected_ and _Carcass_, which both carry a virus in this model.
 
 
 ### Rules
