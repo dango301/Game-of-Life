@@ -13,7 +13,8 @@ The _Infected_-Object is initialized with a certain severity and duration charac
 2. _dur = 0_: at end of infection period cell either dies and leaves carcass with one third of its severity or lives on as normal cell based on _deathProb_
 3. standard rule: death due to under- / overpopulation if not exactly three live neighbors; leaves Carcass with full severity.
 
-The _Carcass_-Object only possesses properties the properties _severity_ and _dur_ (for how many generations a carcass will stay on the grid before turning into a normal dead cell). Its only purpose is to perhaps infect other _Cell_-Objects or worsen the severity of already infected cells.
+The _Carcass_-Object only possesses the properties _severity_ and _dur_ (for how many generations a carcass will stay on the grid before turning into a normal dead cell). Its only purpose is to perhaps infect other _Cell_-Objects or worsen the severity of already infected cells.
+
 
 
 _The standard game can be downloaded from the main branch (this one). Various examples of games with modified rules and additional cell types can be found in the other branches._
