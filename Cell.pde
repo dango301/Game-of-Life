@@ -70,6 +70,6 @@ class Cell {
 // To add further sub-classes they must extend the super, Cell
 
 // In each sub-class one can override three methods: clone, transition and display
-// clone method: return an identical object as a copy by simply instantiating one of the SAME type with all of the objects same properties
-// transition method: this is where you may implement customized rulesets; use getNeighbours to base rules on surrounding cells; use the className-method on neighbours to create different rules for different classes
-// display method: make changes to how the objects should be drawn; appearance may be based on custom class properties to make the cells more expressive visually   
+// clone method: return an identical object as a copy by simply instantiating one of the SAME type with all of the object's same properties
+// transition method: this is where you may implement customized rulesets; use getNeighbours to base rules on surrounding cells; use the className-method to create different rules based on a cell's neighbours and their different classes, respectively
+// display method: make changes to how the objects should be drawn; appearance may be based on custom class properties to make the cells more expressive visually
