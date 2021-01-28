@@ -1,5 +1,5 @@
 // User Variables
-float res = 10; //dimensions of each cell in px //rename to resolution in the end
+float res = 50; //dimensions of each cell in px //rename to resolution in the end
 float margin = 8;  // margin on each side of the screen
 float maxHz = 2500;
 float gridWeight = 0.25; // min of .01 to prevent strange behaviour
@@ -24,12 +24,24 @@ long gen = 0;
 
 
 void setup() {
-    //size(800, 600);
-    fullScreen(1);
-    //throw error if min. width: 800px for buttons or min height for one row isnt enough (dont forget margins)
+    size(800, 600);
+
+    
     surface.setTitle("\"The Game of Life\" by Dennis Paust  © 2021");
     surface.setLocation(0, 0);
     frameRate(120);
+    
+    float minHeight = 40 + 2 * margin + 3 * res;
+    if (width < 800) {
+        println("Please increase the window's width to the minimum of 800px.");
+        exit();
+    }
+    if (height < minHeight) {
+        println("The minimum height for the window is " + minHeight + "px for your resolution of " + res + "px.");
+        println("Please try increasing the window's height or reducing the resolution variable.");
+        exit();
+    }
+    if (width < 800 || height < minHeight) return;
     
     println("============================================================================");
     println("Keyboard / Mouse inputs for the User:");
