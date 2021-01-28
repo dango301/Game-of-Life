@@ -1,4 +1,5 @@
-float tankP = .125;
+float tankP = 0.125;
+float killerP = 0.75;
 
 
 class Cell {
@@ -22,7 +23,7 @@ class Cell {
         return this.getClass().getSimpleName();
     }
     
-    Cell[] getNeighbours(int x, int y) {
+    Cell[] getNeighbours() {
         Cell[] res = new Cell[8];
         int index = 0;
         
@@ -41,11 +42,24 @@ class Cell {
     
     //called from nextGeneration() and includes ruleset for each cell type 
     Cell transition() {
-        Cell[] nbs = getNeighbours(x, y);
+        Cell[] nbs = getNeighbours();
         int sum = 0;
+        int tankNeighbours = 0;
         
         for (int i = 0; i < nbs.length; i++) {
-            sum +=nbs[i].alive ? 1 : 0;
+            Cell c = nbs[i];
+            sum += c.alive ? 1 : 0;
+            
+            if (c.className().equals("Tank")) {
+                Tank t = (Tank)c;
+                Cell[] n = t.getNeighbours();
+                int s = 0;
+                
+                for (int j = 0; j < n.length; j++)
+                    s += n[j].alive ? 1 : 0;
+                
+                if (s > 2) tankNeighbours++;
+            }
         }
         
         // NEW RULES
@@ -54,6 +68,12 @@ class Cell {
             else return new Tank(true, x, y, 3);
         }
         else if (alive && (sum < 2 || sum > 3)) alive = false;
+        else if (alive && sum == 3 && tankNeighbours > 0) {
+            if (random(1) * tankNeighbours < killerP)
+                alive = false;
+        }
+        
+        
         return this;
     }
     
@@ -68,13 +88,10 @@ class Cell {
 }
 
 
-// At the moment, the Cell class only keeps track of the state alive / dead.
-// To add further sub-classes they must extend the super, Cell
-
 // In each sub-class one can override three methods: clone, transition and display
 // clone method: return an identical object as a copy by simply instantiating one of the SAME type with all of the objects same properties
 // transition method: this is where you may implement customized rulesets; use getNeighbours to base rules on surrounding cells; use the className-method on neighbours to create different rules for different classes
-// display method: make changes to how the objects should be drawn; appearance may be based on custom class properties to make the cells more expressive visually   
+// display method: make changes to how the objects should be drawn; appearance may be based on custom class properties to make the cells more expressive visually 
 
 
 class Tank extends Cell {
@@ -93,7 +110,7 @@ class Tank extends Cell {
     
     Cell transition() {
         
-        Cell[] nbs = getNeighbours(x, y);
+        Cell[] nbs = getNeighbours();
         int sum = 0;
         
         for (int i = 0; i < nbs.length; i++) {
@@ -109,21 +126,9 @@ class Tank extends Cell {
                 hp = 5;
             }
         }
-        else if (alive) { // && (sum < 2 || sum > 3)
-            
-            if (sum > 2 || sum == 0) {
-                hp = max(0, --hp);
-                if (hp == 0) return new Cell(false, x, y);
-            }
-            if (sum > 2) {
-                int s = floor(random(0, nbs.length));
-                int l = nbs.length;
-                int m = floor(random(4, 7));
-                for (int i = s; i < m + s; i++) {
-                    Cell dead = nbs[(i + l) % l];
-                    nextGrid[dead.x][dead.y] = new Cell(false, dead.x, dead.y);
-                }
-            }
+        else if (alive && sum > 2 || sum == 0) {
+            if (--hp <= 0)
+                return new Cell(false, x, y);
         }
         
         return this;
