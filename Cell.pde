@@ -21,7 +21,7 @@ class Cell {
         return this.getClass().getSimpleName();
     }
     
-    Cell[] getNeighbours(int x, int y) {
+    Cell[] getNeighbours() {
         Cell[] res = new Cell[8];
         int index = 0;
         
@@ -40,7 +40,7 @@ class Cell {
     
     //called from nextGeneration() and includes ruleset for each cell type 
     Cell transition() {
-        Cell[] nbs = getNeighbours(x, y);
+        Cell[] nbs = getNeighbours();
         int sum = 0;
         
         for (int i = 0; i < nbs.length; i++) {
