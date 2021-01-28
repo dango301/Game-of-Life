@@ -17,7 +17,7 @@ The _Carcass_-Object only possesses the properties _severity_ and _dur_ (for how
 
 
 
-_The standard game can be downloaded from the main branch (this one). Various examples of games with modified rules and additional cell types can be found in the other branches._
+_The standard game can be downloaded from the main branch. Various examples of games with modified rules and additional cell types can be found in the other branches._
 
 ```diff
 ! Remember to change the folder's name to "Game_of_Life_Virus", the main sketch's name, when downloading the project !
