@@ -2,6 +2,7 @@ float infectionProb = 0.05;
 float transferProb = 0.5;
 float deathProb = 0.125;
 float spawnSev = 0.5;
+float spawnDur = 4;
 float maxSev = 3;
 float healingRate = 1 / 3;
 
@@ -69,9 +70,9 @@ class Cell {
         
         if (alive) {
             if (severitySum > 0)
-                return new Infected(x, y, severitySum, 4);
+                return new Infected(x, y, severitySum, spawnDur);
             else if (random(1) < infectionProb)
-                return new Infected(x, y, spawnSev, 4);
+                return new Infected(x, y, spawnSev, spawnDur);
         }
         
         return this;
