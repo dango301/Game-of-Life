@@ -1,4 +1,4 @@
-float tankP = 0.125;
+float tankP = 0.1;
 float killerP = 0.75;
 
 
@@ -65,7 +65,7 @@ class Cell {
         // NEW RULES
         if (!alive && sum == 3) {
             if (random(1) > tankP) alive = true;
-            else return new Tank(true, x, y, 3);
+            else return new Tank(x, y, 3);
         }
         else if (alive && (sum < 2 || sum > 3)) alive = false;
         else if (alive && sum == 3 && tankNeighbours > 0) {
@@ -98,23 +98,36 @@ class Tank extends Cell {
     int maxHP;
     int hp;
     
-    Tank(boolean alive, int x, int y, int maxHP, int...hp) { // health refers to number of generations the tank can survive despite having no neighbours
-        super(alive, x, y);
+    Tank(int x, int y, int maxHP, int...hp) { // health refers to number of generations the tank can survive despite having no neighbours
+        super(true, x, y);
         this.maxHP = maxHP;
         this.hp = hp.length > 0 ? hp[0] : maxHP;
     }
     
     Tank clone() {
-        return new Tank(alive, x, y, maxHP, hp);
+        return new Tank(x, y, maxHP, hp); // Tanks are always alive; if they die, a normal, dead cell is returned
     }
     
     Cell transition() {
         
         Cell[] nbs = getNeighbours();
         int sum = 0;
+        int tankNeighbours = 0;
         
         for (int i = 0; i < nbs.length; i++) {
-            sum +=nbs[i].alive ? 1 : 0;
+            Cell c = nbs[i];
+            sum += c.alive ? 1 : 0;
+            
+            if (c.className().equals("Tank")) {
+                Tank t = (Tank)c;
+                Cell[] n = t.getNeighbours();
+                int s = 0;
+                
+                for (int j = 0; j < n.length; j++)
+                    s += n[j].alive ? 1 : 0;
+                
+                if (s > 2) tankNeighbours++;
+            }
         }
         
         // NEW RULES
@@ -123,11 +136,15 @@ class Tank extends Cell {
                 return new Cell(true, x, y);
             else {
                 alive = true;
-                hp = constrain(++hp, 0, maxHP) // regenerate health if surrounded by exactly three live neighbours
+                hp = constrain(++hp, 0, maxHP); // regenerate health if surrounded by exactly three live neighbours
             }
         }
         else if (alive && sum > 2 || sum == 0) {
             if (--hp <= 0)
+                return new Cell(false, x, y);
+        }
+        else if (alive && sum == 3 && tankNeighbours > 0) {
+            if (random(1) * tankNeighbours < killerP)
                 return new Cell(false, x, y);
         }
         
