@@ -28,7 +28,7 @@ class Cell {
         return this.getClass().getSimpleName();
     }
     
-    Cell[] getNeighbours(int x, int y) {
+    Cell[] getNeighbours() {
         Cell[] res = new Cell[8];
         int index = 0;
         
@@ -47,7 +47,7 @@ class Cell {
     
     //called from nextGeneration() and includes ruleset for each cell type 
     Cell transition() {
-        Cell[] nbs = getNeighbours(x, y);
+        Cell[] nbs = getNeighbours();
         int sum = 0;
         float severitySum = 0;
         
@@ -121,7 +121,7 @@ class Infected extends Cell {
             return new Carcass(x, y, 1, severity); // leave carcass with same severity of disease if not healthy before duration of infection runs out
         
         
-        Cell[] nbs = getNeighbours(x, y);
+        Cell[] nbs = getNeighbours();
         int sum = 0;
         
         for (int i = 0; i < nbs.length; i++) {
