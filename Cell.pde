@@ -1,5 +1,5 @@
-float infectionProb = 0.01;
-float transferProb = 0.75;
+float infectionProb = 0.05;
+float transferProb = 1;
 float deathProb = 0.66;
 
 
@@ -45,28 +45,28 @@ class Cell {
     Cell transition() {
         Cell[] nbs = getNeighbours(x, y);
         int sum = 0;
-        int infectionSum = 0;
+        int severitySum = 0;
         
         for (int i = 0; i < nbs.length; i++) {
             Cell c = nbs[i];
             sum += c.alive ? 1 : 0;
             String n = c.className();
             
-            if (alive && random(1) < transferProb) {
-                if (n.equals("Infected") && (c.x == x || c.y == y)) infectionSum += ((Infected)c).dur; // only infected by directly adjacent neighbours
-                else if (n.equals("Carcass")) infectionSum += ((Carcass)c).dur;
+            if (random(1) < transferProb) {
+                if (n.equals("Infected") && (c.x == x || c.y == y)) severitySum += ((Infected)c).severity; // only infected by directly adjacent neighbours
+                else if (n.equals("Carcass")) severitySum += ((Carcass)c).severity;
             }
             
         }
         
         // RULES
         if (!alive && sum == 3) alive = true;
-        else if (alive && (sum < 2 || sum > 4)) alive = false;
+        else if (alive && (sum < 2 || sum > 3)) alive = false;
         
-        if (alive && infectionSum > 0)
-            return new Infected(true, x, y, infectionSum);
+        if (alive && severitySum > 0)
+            return new Infected(x, y, severitySum, 4); //TODO: consider using average of all infected neighbour's durs
         if (alive && random(1) < infectionProb)
-            return new Infected(true, x, y, 4);
+            return new Infected(x, y, 0.5, 4);
         
         
         return this;
@@ -91,24 +91,28 @@ class Cell {
 // transition method: this is where you may implement customized rulesets; use getNeighbours to base rules on surrounding cells; use the className-method on neighbours to create different rules for different classes
 // display method: make changes to how the objects should be drawn; appearance may be based on custom class properties to make the cells more expressive visually
 
-float textS = res * 2 / 3;
+float textS = res * 1 / 3;
 
 class Infected extends Cell {
-    int maxDur;
+    float maxSeverity = 3;
+    float severity;
     int dur;
+    float maxHealth = 5;
+    float health;
     
-    Infected(boolean alive, int x, int y, int duration, int...maxDuration) {
-        super(alive, x, y);
-        dur = duration;
-        maxDur = maxDuration.length > 0 ? maxDuration[0] : duration;
+    Infected(int x, int y, float severity, int dur, float...health) {
+        super(true, x, y); // Infected cells are alive by default; once they die, they are replaced by normal dead cells or carcasses
+        this.dur = dur;
+        this.health = health.length > 0 ? health[0] : maxHealth;
     }
     
     Infected clone() {
-        return new Infected(alive, x, y, dur, maxDur);
+        return new Infected(x, y, severity, dur, health);
     }
     
     Cell transition() {
         
+        health -= severity;    
         Cell[] nbs = getNeighbours(x, y);
         int sum = 0;
         
@@ -119,19 +123,22 @@ class Infected extends Cell {
             
             // infection is exacerbated by other infected cells or carcasses
             if (random(1) < transferProb) {
-                if (n.equals("Infected") && (c.x == x || c.y == y)) dur -= ((Infected)c).dur;
-                else if (n.equals("Carcass")) dur -= ((Carcass)c).dur;
+                if (n.equals("Infected") && (c.x == x || c.y == y)) severity += ((Infected)c).severity;
+                else if (n.equals("Carcass")) severity += ((Carcass)c).severity;
             }
         }        
         
-        dur = max(0, dur - 1);
-        if (dur == 0) { //at end of infection period cell either dies and leaves carcass or lives as normal cell
-            if (random(1) < deathProb) return new Carcass(false, x, y, 1); // perhaps base propabilty to severity of infection (maxDur)
+        if (health <= 0) { // leave carcass with same severity of disease if not healed before duration of infection runs out
+            return new Carcass(x, y, 1, severity);
+        }
+        
+        if (--dur <= 0) { //at end of infection period cell either dies and leaves carcass or lives as normal cell
+            if (random(1) < deathProb) return new Carcass(x, y, 1, severity / 3); // perhaps base propabilty to severity of infection (maxDur)
             else return new Cell(true, x, y);
         }
         
         // standard rule: dies if not exactly three live neighbours
-        if (alive && (sum < 2 || sum > 4)) return new Carcass(false, x, y, 1); // leaves infectious carcass if not healed before death
+        if (alive && (sum < 2 || sum > 3)) return new Carcass(x, y, 1, severity); // leaves infectious carcass  with same severity of disease if not healed before death
         
         
         return this;
@@ -139,48 +146,51 @@ class Infected extends Cell {
     
     void display() {
         
-        fill(float(dur) / maxDur * 255, 0, 0);
+        fill(severity / maxSeverity * 255 + 50, 0, 0); //TODO: consider using exponential scale for color
         stroke(0);
         strokeWeight(gridWeight);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
         
         fill(255);
         textSize(textS);
-        text(str(dur), x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
+        text(str(health), x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
     }
 }
 
 
 class Carcass extends Cell {
+    float maxSeverity = 3;
+    float severity;
     int dur; // for how many generations a carcass remains "alive", meaning for hol wlong it will stay on the grid before turning into a normal dead cell
     
-    Carcass(boolean alive, int x, int y, int duration) {
-        super(alive, x, y);
-        dur = duration;
+    Carcass(int x, int y, int dur, float severity) {
+        super(false, x, y); // carcass is dead by definition
+        this.dur = dur;
+        this.severity = severity;
     }
     
     Carcass clone() {
-        return new Carcass(alive, x, y, dur);
+        return new Carcass(x, y, dur, severity);
     }
     
     Cell transition() {
         
-        dur = max(0, dur - 1);
-        if (dur == 0) return new Cell(false, x, y);
-        
+        if (--dur <= 0)
+            return new Cell(false, x, y);
         
         return this;
     }
     
     void display() {
         
-        fill(218, 222, 0);
+        float val = severity / maxSeverity * 255 + 100;
+        fill(val, val, 0);
         stroke(0);
         strokeWeight(gridWeight);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
         
         fill(255);
-        textSize(res);
+        textSize(textS);
         text(str(dur), x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
     }
 }

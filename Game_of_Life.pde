@@ -28,7 +28,6 @@ void setup() {
     // fullScreen(1);
     //throw error if min. width: 800px for buttons or min height for one row isnt enough (dont forget margins)
     surface.setTitle("\"The Game of Life\" by Dennis Paust  © 2021");
-    //surface.setResizable(true);
     surface.setLocation(0, 0);
     frameRate(120);
     
