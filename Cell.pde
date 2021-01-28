@@ -1,5 +1,5 @@
 float tankP = 0.1;
-float killerP = 0.75;
+float killerP = 0.7;
 
 
 class Cell {
@@ -154,9 +154,14 @@ class Tank extends Cell {
     
     
     void display() {
-        fill(alive ? color(0, float(hp) / maxHP * 255, 0) : 255);
+        fill(0, float(hp) / maxHP * 220, 0);
         stroke(0);
         strokeWeight(gridWeight);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
+
+        
+        fill(255);
+        textSize(res * 2 / 3);
+        text(str(hp), x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
     }
 }
