@@ -110,7 +110,7 @@ void slider(boolean allowOverflow) {
     
     x = constrain(x, 600, width - 120);
     float p = map(x, 600, width - 120, 0, 1);
-    float hz = pow(10, p * log(maxHz) / log(10)); // power with base 10 with maximal exponent such as to reach maxHz for p=1 
+    float hz = pow(10, p * log(maxHz) / log(10)); // power with base 10 with p * maximal exponent such as to reach maxHz for p=1 
     T = 1000 / hz;
     //println(hz, T);
     
@@ -151,7 +151,7 @@ void drawInitialGrid(boolean dragged) {
 
 void toggleLoop(boolean...forcedState) {
     isLooping = forcedState.length > 0 ? forcedState[0] : !isLooping;
-
+    
     fill(0);
     rect(240, 0, 120, 40);
     
