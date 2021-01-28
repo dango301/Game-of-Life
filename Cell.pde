@@ -1,9 +1,9 @@
 float infectionProb = 0.05;
-float transferProb = 0.25;
+float transferProb = 0.5;
 float deathProb = 0.125;
-float spawnSev = .5;
+float spawnSev = 0.5;
 float maxSev = 3;
-float healingRate = .5;
+float healingRate = 1 / 3;
 
 
 class Cell {
@@ -93,7 +93,7 @@ class Cell {
 // transition method: this is where you may implement customized rulesets; use getNeighbours to base rules on surrounding cells; use the className-method on neighbours to create different rules for different classes
 // display method: make changes to how the objects should be drawn; appearance may be based on custom class properties to make the cells more expressive visually
 
-float textS = res * 1 / 3;
+float textS = res * 2 / 3;
 
 class Infected extends Cell {
     float maxSeverity = maxSev;
@@ -138,7 +138,7 @@ class Infected extends Cell {
                 else if (n.equals("Carcass")) severity += ((Carcass)c).severity;
             }
         }
-        
+        health = constrain(health, 0, maxHealth);
         
         if (--dur <= 0) { //at end of infection period cell either dies and leaves carcass or lives as normal cell
             if (random(1) < deathProb) return new Carcass(x, y, 1, severity / 3); // perhaps base propabilty to severity of infection (maxDur)
