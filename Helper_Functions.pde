@@ -7,9 +7,10 @@ void nextGeneration() {
     for (int i = 0; i < cols; i++) {
         for (int j = 0; j < rows; j++) {
             // clone to transfer properties of original Cell-Object to a new one as not to modify any Cells in the original grid while its values are still needed
+            // transition function has a return type of Cell (since a given cell it may be transitioned into another cell type, if sub-classes are created)
             Cell clone = grid[i][j].clone().transition();
             nextGrid[i][j] = clone;
-            clone.display();// note: for some reason all cells are only drawn at once, after the loop is done
+            clone.display(); // note: all cells are drawn at once after the loop is done
         }
     }
     
@@ -110,7 +111,7 @@ void slider(boolean allowOverflow) {
     
     x = constrain(x, 600, width - 120);
     float p = map(x, 600, width - 120, 0, 1);
-    float hz = pow(10, p * log(maxHz) / log(10)); // power with base 10 with maximal exponent such as to reach maxHz for p=1 
+    float hz = pow(10, p * log(maxHz) / log(10)); // power with base 10 and a maximal exponent such as to reach maxHz for p=1 
     T = 1000 / hz;
     //println(hz, T);
     
@@ -118,6 +119,7 @@ void slider(boolean allowOverflow) {
     fill(0);
     rect(480, 0, width, 40);
     fill(255);
+    textSize(20);
     text("Speed:", 480, 0, 120, 40);
     rect(600, 18, width - 720, 4, 4);
     text(nf(hz, 0, 2) + "Hz", width - 120, 0, 120, 40);
@@ -150,8 +152,11 @@ void drawInitialGrid(boolean dragged) {
 
 void toggleLoop(boolean...forcedState) {
     isLooping = forcedState.length > 0 ? forcedState[0] : !isLooping;
+    
     fill(0);
     rect(240, 0, 120, 40);
+    
     fill(255);
+    textSize(20);
     text(isLooping ? "Pause" : "Play", 240, 0, 120, 40);
 }
