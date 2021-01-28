@@ -123,7 +123,7 @@ class Tank extends Cell {
                 return new Cell(true, x, y);
             else {
                 alive = true;
-                hp = 5;
+                hp = constrain(++hp, 0, maxHP) // regenerate health if surrounded by exactly three live neighbours
             }
         }
         else if (alive && sum > 2 || sum == 0) {
