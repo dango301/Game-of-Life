@@ -1,7 +1,7 @@
 # Conway's Game of Life
 ##### written in Processing (Version 3.5.4)
 ```diff
-! Remember to change the folder's name to the name of the main sketch, when downloading the project !
+! Remember to change the folder's name to the main sketch's name, "Game_of_Life",  when downloading the project !
 ```
 
 
