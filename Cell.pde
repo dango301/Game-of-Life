@@ -41,13 +41,14 @@ class Cell {
     
     
     ArrayList<Cell> dfs() { // depth-first search that returns amount of directly connected cells
-        this.discovered = true;
+        grid[x][y].discovered = true; // target grid cell not this.discovered because that property would belong to the clone, not what the neighbourse would be searching for
         
-        println();
+        // println();
+        // println();
         if (!alive) return new ArrayList<Cell>();
         ArrayList<Cell> sum = new ArrayList<Cell>();
         
-        Cell[] nbs = getNeighbours();
+        Cell[] nbs = getNeighbours(); // this only works because neighbours are taken directly from grid
         for (Cell c : nbs) {    
             if (c.alive && (c.x == x || c.y == y)) {
                 ArrayList<Cell> summand = c._dfs();
@@ -61,7 +62,10 @@ class Cell {
                 grid[i][j].discovered = false;
             }
         }
-        println("==>", x, y, sum);
+        // println("==>", x, y, sum.size());
+        // for (Cell c : sum)
+        //     println(c.x, c.y);
+
         return sum;
     }
     
@@ -81,7 +85,10 @@ class Cell {
         }
         
         sum.add(this);
-        println(x, y, sum);
+        // println("->", x, y, sum.size());
+        // for (Cell c : sum)
+        //     println(c.x, c.y);
+        
         return sum;
     }
     
@@ -91,9 +98,10 @@ class Cell {
     //called from nextGeneration() and includes ruleset for each cell type 
     Cell transition() {
         
-        if (nextTribe != null) {
-            TribeMember newC = new TribeMember(x, y, nextTribe);
-            nextTribe.addMember(newC);
+        Tribe _nextTribe = grid[x][y].nextTribe;
+        if (_nextTribe != null) {
+            TribeMember newC = new TribeMember(x, y, _nextTribe);
+            _nextTribe.addMember(newC);
             return newC;
         }
         
@@ -101,7 +109,6 @@ class Cell {
         Cell[] nbs = getNeighbours();
         int sum = 0;
         
-        // if (alive) println("\n==>", x, y);
         for (int i = 0; i < nbs.length; i++) {
             Cell c = nbs[i];
             String n = c.className();
@@ -113,7 +120,7 @@ class Cell {
                 
                 if (cc.tribe.size() > 4) {
                     alive = false;
-                    println("Tribe killed", x, y);
+                    if (alive) println("Tribe killed this cell at", x, y);
                     return this;
                 }
             }
@@ -122,14 +129,12 @@ class Cell {
         
         if (!alive && sum == 3) alive = true;
         else if (alive && (sum < 2 || sum > 3)) alive = false;
-        
-        
-        if (alive) {
+        else if (alive) {
             ArrayList<Cell> directNbs = dfs();
             
-            println("\n==>", x, y);
-            for (Cell c : directNbs)
-                println(c.x, c.y);
+            // println("\n==>", x, y, directNbs.size());
+            // for (Cell c : directNbs)
+            //     println(c.x, c.y);
             
             if (directNbs.size() < 2) alive = false;
             else if (directNbs.size() > 2) { // sum must be at least 3, which, together with this live cell, makes a total of at least 4 cells ready to form a tribe
