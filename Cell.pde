@@ -4,6 +4,7 @@ class Cell {
     boolean alive;
     int x;
     int y;
+    Tribe nextTribe = null;
     
     Cell(boolean alive, int x, int y) {
         this.alive = alive;
@@ -41,67 +42,52 @@ class Cell {
     //called from nextGeneration() and includes ruleset for each cell type 
     Cell transition() {
         Cell[] nbs = getNeighbours();
+        int sum = 0;
+        ArrayList<Cell> tribeNbs = new ArrayList<Cell>();
         
-        // loop only gets neighbours from cells that were already added to nextGrid, meaning neighbours before this one in the grid structure
-        Cell[] nextNbs = new Cell[4];
-        int index = 0;
-        
-        if (alive) println("\n==>", x, y);
-        for (int i = - 1; i < 1; i++) {
-            for (int j = - 1; j < 2; j++) {
-                
-                int col = (x + i + cols) % cols;
-                int row = (y + j + rows) % rows;
-                if (!(i == 0 && j >= 0))
-                    nextNbs[index++] = nextGrid[col][row];
-            }
-        }
-        
-        
-        for (int i = 0; i < nextNbs.length; i++) {
-            Cell c;
-            String n;
-            try {
-                c = nextNbs[i];
-                n = c.className();
-            } catch(NullPointerException err) {
-                println(i, err);
-                continue;
-            }
+        // if (alive) println("\n==>", x, y);
+        for (int i = 0; i < nbs.length; i++) {
+            Cell c = nbs[i];
+            String n = c.className();
+            sum += c.alive ? 1 : 0;
             
-            if (alive) println(x, y, n, n.equals("TribeMember"));
+            
             if (n.equals("TribeMember")) {
-                println("Tribe at", c.x, c.y);
                 TribeMember cc = (TribeMember)c;
                 
                 if (cc.tribe.size() > 4) {
                     alive = false;
+                    println("Tribe killed", x, y);
                     return this;
-                } else if (alive) {
-                    TribeMember newC = new TribeMember(x, y, cc.tribe);
-                    cc.tribe.addMember(newC);
-                    return newC;
                 }
+            } else if (alive && c.nextTribe != null) {
+                tribeNbs.add(c);
             }
         }
         
         
-        
-        int sum = 0;
-        for (int i = 0; i < nbs.length; i++) {
-            sum += nbs[i].alive ? 1 : 0;
-        }
-        
-        // RULES (standard)
-        if (!alive && sum == 3) alive = true;
-        else if (alive) {
-            if (sum < 2) alive = false;
-            else if (sum > 2) { // sum must be at least 3, which, together with this live cell, makes a total of at least 4 cells ready to form a tribe
-                Tribe newT = new Tribe();
-                TribeMember newC = new TribeMember(x, y, newT);
-                newT.addMember(newC);
-                println("Created new Tribe at", x, y);
+        if (tribeNbs.size() > 0) {
+
+            if (alive) {
+                Cell c = tribeNbs.get(floor(random(tribeNbs.size())));
+                TribeMember newC = new TribeMember(x, y, c.nextTribe);
+                c.nextTribe.addMember(newC);
                 return newC;
+            }
+            
+        } else {
+            
+            if (!alive && sum == 3) alive = true;
+            else if (alive) {
+                if (sum < 2) alive = false;
+                else if (sum > 2) { // sum must be at least 3, which, together with this live cell, makes a total of at least 4 cells ready to form a tribe
+                    Tribe newTribe = new Tribe();
+                    TribeMember newCell = new TribeMember(x, y, newTribe);
+                    newTribe.addMember(newCell);
+                    grid[x][y].nextTribe = newTribe; // change property in original grid so following cells can join that tribe instead of creating a new one
+                    println("Created new Tribe at", x, y);
+                    return newCell;
+                }
             }
         }
         
@@ -188,6 +174,14 @@ class TribeMember extends Cell{
     }
     
     Cell transition() {
+        Cell[] nbs = getNeighbours();
+        
+        for (Cell c : nbs) {
+            String n = c.className();
+            
+            
+        }
+        
         
         return this;
     }
