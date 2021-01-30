@@ -5,6 +5,7 @@ class Cell {
     int x;
     int y;
     Tribe nextTribe = null;
+    boolean discovered = false; // only needed for dfs method; has no semantic value
     
     Cell(boolean alive, int x, int y) {
         this.alive = alive;
@@ -39,6 +40,47 @@ class Cell {
     }
     
     
+    int dfs() { // depth-first search that returns amount of directly connected cells
+        if (!alive) return 0;
+        
+        // println();
+        this.discovered = true;
+        int sum = 0;
+        Cell[] nbs = getNeighbours();
+        
+        for (Cell c : nbs) {    
+            if (c.alive && (c.x == x || c.y == y))
+                sum += c._dfs();
+        }
+        
+        for (int i = 0; i < cols; i++) {
+            for (int j = 0; j < rows; j++) {
+                grid[i][j].discovered = false;
+            }
+        }
+        // println("==>", x, y, sum);
+        return sum;
+    }
+    
+    int _dfs() {
+        if (this.discovered) return 0;
+        else this.discovered = true;
+        
+        int sum = 0;
+        Cell[] nbs = getNeighbours();
+        
+        for (Cell c : nbs) {
+            if (c.alive && (c.x == x || c.y == y))
+                sum += c._dfs();
+        }
+        
+        // println(x, y, sum + 1);
+        return ++sum;
+    }
+    
+    
+    
+    
     //called from nextGeneration() and includes ruleset for each cell type 
     Cell transition() {
         Cell[] nbs = getNeighbours();
@@ -67,7 +109,7 @@ class Cell {
         
         
         if (tribeNbs.size() > 0) {
-
+            
             if (alive) {
                 Cell c = tribeNbs.get(floor(random(tribeNbs.size())));
                 TribeMember newC = new TribeMember(x, y, c.nextTribe);
@@ -80,7 +122,7 @@ class Cell {
             if (!alive && sum == 3) alive = true;
             else if (alive) {
                 if (sum < 2) alive = false;
-                else if (sum > 2) { // sum must be at least 3, which, together with this live cell, makes a total of at least 4 cells ready to form a tribe
+                else if (dfs() > 2) { // sum must be at least 3, which, together with this live cell, makes a total of at least 4 cells ready to form a tribe
                     Tribe newTribe = new Tribe();
                     TribeMember newCell = new TribeMember(x, y, newTribe);
                     newTribe.addMember(newCell);
