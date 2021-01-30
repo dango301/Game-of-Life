@@ -40,17 +40,20 @@ class Cell {
     }
     
     
-    int dfs() { // depth-first search that returns amount of directly connected cells
-        if (!alive) return 0;
-        
-        // println();
+    ArrayList<Cell> dfs() { // depth-first search that returns amount of directly connected cells
         this.discovered = true;
-        int sum = 0;
-        Cell[] nbs = getNeighbours();
         
+        println();
+        if (!alive) return new ArrayList<Cell>();
+        ArrayList<Cell> sum = new ArrayList<Cell>();
+        
+        Cell[] nbs = getNeighbours();
         for (Cell c : nbs) {    
-            if (c.alive && (c.x == x || c.y == y))
-                sum += c._dfs();
+            if (c.alive && (c.x == x || c.y == y)) {
+                ArrayList<Cell> summand = c._dfs();
+                for (Cell s : summand)
+                    sum.add(s);
+            }
         }
         
         for (int i = 0; i < cols; i++) {
@@ -58,24 +61,28 @@ class Cell {
                 grid[i][j].discovered = false;
             }
         }
-        // println("==>", x, y, sum);
+        println("==>", x, y, sum);
         return sum;
     }
     
-    int _dfs() {
-        if (this.discovered) return 0;
+    ArrayList<Cell> _dfs() {
+        ArrayList<Cell> sum = new ArrayList<Cell>();
+        
+        if (this.discovered) return sum;
         else this.discovered = true;
         
-        int sum = 0;
         Cell[] nbs = getNeighbours();
-        
-        for (Cell c : nbs) {
-            if (c.alive && (c.x == x || c.y == y))
-                sum += c._dfs();
+        for (Cell c : nbs) {    
+            if (c.alive && (c.x == x || c.y == y)) {
+                ArrayList<Cell> summand = c._dfs();
+                for (Cell s : summand)
+                    sum.add(s);
+            }
         }
         
-        // println(x, y, sum + 1);
-        return ++sum;
+        sum.add(this);
+        println(x, y, sum);
+        return sum;
     }
     
     
@@ -83,9 +90,16 @@ class Cell {
     
     //called from nextGeneration() and includes ruleset for each cell type 
     Cell transition() {
+        
+        if (nextTribe != null) {
+            TribeMember newC = new TribeMember(x, y, nextTribe);
+            nextTribe.addMember(newC);
+            return newC;
+        }
+        
+        
         Cell[] nbs = getNeighbours();
         int sum = 0;
-        ArrayList<Cell> tribeNbs = new ArrayList<Cell>();
         
         // if (alive) println("\n==>", x, y);
         for (int i = 0; i < nbs.length; i++) {
@@ -102,34 +116,33 @@ class Cell {
                     println("Tribe killed", x, y);
                     return this;
                 }
-            } else if (alive && c.nextTribe != null) {
-                tribeNbs.add(c);
             }
         }
         
         
-        if (tribeNbs.size() > 0) {
+        if (!alive && sum == 3) alive = true;
+        else if (alive && (sum < 2 || sum > 3)) alive = false;
+        
+        
+        if (alive) {
+            ArrayList<Cell> directNbs = dfs();
             
-            if (alive) {
-                Cell c = tribeNbs.get(floor(random(tribeNbs.size())));
-                TribeMember newC = new TribeMember(x, y, c.nextTribe);
-                c.nextTribe.addMember(newC);
-                return newC;
-            }
+            println("\n==>", x, y);
+            for (Cell c : directNbs)
+                println(c.x, c.y);
             
-        } else {
-            
-            if (!alive && sum == 3) alive = true;
-            else if (alive) {
-                if (sum < 2) alive = false;
-                else if (dfs() > 2) { // sum must be at least 3, which, together with this live cell, makes a total of at least 4 cells ready to form a tribe
-                    Tribe newTribe = new Tribe();
-                    TribeMember newCell = new TribeMember(x, y, newTribe);
-                    newTribe.addMember(newCell);
-                    grid[x][y].nextTribe = newTribe; // change property in original grid so following cells can join that tribe instead of creating a new one
-                    println("Created new Tribe at", x, y);
-                    return newCell;
-                }
+            if (directNbs.size() < 2) alive = false;
+            else if (directNbs.size() > 2) { // sum must be at least 3, which, together with this live cell, makes a total of at least 4 cells ready to form a tribe
+                
+                Tribe newTribe = new Tribe();
+                TribeMember newCell = new TribeMember(x, y, newTribe);
+                newTribe.addMember(newCell);
+                
+                for (Cell c : directNbs)
+                    grid[c.x][c.y].nextTribe = newTribe; // change property in original grid so following cells can join that tribe instead of creating a new one
+                
+                println("Created new Tribe at", x, y);
+                return newCell;
             }
         }
         

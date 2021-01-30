@@ -162,7 +162,7 @@ void mousePressed() {
     if (mouseButton == CENTER) {
         int i = floor((mouseX - offsetX) / res);
         int j = floor((mouseY - offsetY - 40) / res);
-        println("Clicked on Cell:", i, j, grid[i][j].className(), "#nbs:", grid[i][j].dfs());
+        println("Clicked on Cell:", i, j, grid[i][j].className(), "#nbs:", grid[i][j].dfs().size());
         return;
     }
     
