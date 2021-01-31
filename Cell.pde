@@ -261,11 +261,11 @@ class TribeMember extends Cell{
             if (n.equals("TribeMember")) {
                 TribeMember cc = (TribeMember)c;
                 if (cc.tribe != this.tribe) {
-                    return new Warrior(x, y, tribe.size() / float(tribe.maxSize) * 3, 3);
+                    return new Warrior(x, y, tribe, tribe.size() / float(tribe.maxSize) * 3, 3);
                 }
             } else if (n.equals("Battlefield")) {
                 Battlefield cc = (Battlefield)c;
-                Warrior newCell = new Warrior(x, y, tribe.size() / float(tribe.maxSize) * 3, 3);
+                Warrior newCell = new Warrior(x, y, tribe, tribe.size() / float(tribe.maxSize) * 3, 3);
                 cc.addWarrior(newCell);
                 return newCell;
             }
@@ -289,15 +289,15 @@ class Warrior extends TribeMember {
     float strength;
     float health;
     
-    Warrior(int x, int y, float strength, float maxHealth, float...health) {
-        super(true, x, y);
+    Warrior(int x, int y, Tribe tribe, float strength, float maxHealth, float...health) {
+        super(x, y, tribe);
         this.strength = strength;
         this.maxHealth = maxHealth;
         this.health = health.length > 0 ? health[0] : maxHealth;
     }
     
     Warrior clone() {
-        return new Warrior(x, y, strength, maxHealth, health);
+        return new Warrior(x, y, tribe, strength, maxHealth, health);
     }
     
     Cell transition() {
@@ -333,7 +333,7 @@ class Warrior extends TribeMember {
 }
 
 //FIXME: add removeWarrior methods to Party and Battlefield classes
-class Battlefield extends {
+class Battlefield extends Cell {
     ArrayList<Party> parties = new ArrayList<Party>();
     
     class Party {
@@ -359,11 +359,6 @@ class Battlefield extends {
             parties.add(new Party(t));
         }
     }
-    Battlefield(int x, int y, int, dur, ArrayList<Party>  parties) {
-        super(false, x, y);
-        this.dur = dur;
-        this.parties = parties;
-    }
     
     void addWarrior(Warrior w) {
         for (Party p : parties) {
@@ -372,8 +367,10 @@ class Battlefield extends {
         }
     }
     
-    void clone() {
-        return new Battlefield(x, y, dur, parties);
+    Battlefield clone() {
+        Battlefield b = new Battlefield(x, y, new ArrayList<Tribe>());
+        b.parties = this.parties;
+        return b;
     }
     
     Cell transition() {
@@ -383,7 +380,7 @@ class Battlefield extends {
     
     void display() {
         
-        fill(255, 0, 0);
+        fill(255);
         stroke(0);
         strokeWeight(gridWeight);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
