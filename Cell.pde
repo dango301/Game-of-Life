@@ -1,4 +1,5 @@
-
+// Icons designed by Freepik from www.flaticon.com
+//TODO: put icon attirbution in readme
 
 class Cell {
     boolean alive;
@@ -40,7 +41,7 @@ class Cell {
     }
     
     
-    ArrayList<Cell> dfs() { // depth-first search that returns amount of directly connected cells
+    ArrayList<Cell> dfs() { // depth-first search that returns amount of directly connected cells of the same class as cell that dfs() was called on
         grid[x][y].discovered = true; // target grid cell not this.discovered because that property would belong to the clone, not what the neighbourse would be searching for
         
         // println();
@@ -50,8 +51,8 @@ class Cell {
         
         Cell[] nbs = getNeighbours(); // this only works because neighbours are taken directly from grid
         for (Cell c : nbs) {    
-            if (c.alive && (c.x == x || c.y == y)) {
-                ArrayList<Cell> summand = c._dfs();
+            if (c.alive && (c.x == x || c.y == y) && c.className().equals(this.className())) {
+                ArrayList<Cell> summand = c._dfs(this.className());
                 for (Cell s : summand)
                     sum.add(s);
             }
@@ -65,11 +66,11 @@ class Cell {
         // println("==>", x, y, sum.size());
         // for (Cell c : sum)
         //     println(c.x, c.y);
-
+        
         return sum;
     }
     
-    ArrayList<Cell> _dfs() {
+    ArrayList<Cell> _dfs(String n) {
         ArrayList<Cell> sum = new ArrayList<Cell>();
         
         if (this.discovered) return sum;
@@ -77,8 +78,8 @@ class Cell {
         
         Cell[] nbs = getNeighbours();
         for (Cell c : nbs) {    
-            if (c.alive && (c.x == x || c.y == y)) {
-                ArrayList<Cell> summand = c._dfs();
+            if (c.alive && (c.x == x || c.y == y) && c.className().equals(n)) {
+                ArrayList<Cell> summand = c._dfs(n);
                 for (Cell s : summand)
                     sum.add(s);
             }
@@ -99,7 +100,7 @@ class Cell {
     Cell transition() {
         
         Tribe _nextTribe = grid[x][y].nextTribe;
-        if (_nextTribe != null) {
+        if (_nextTribe != null) { // join tribe that was formed by first member in grid
             TribeMember newC = new TribeMember(x, y, _nextTribe);
             _nextTribe.addMember(newC);
             return newC;
@@ -108,22 +109,41 @@ class Cell {
         
         Cell[] nbs = getNeighbours();
         int sum = 0;
+        ArrayList<Tribe> tribeNbs = new ArrayList<Tribe>();
         
         for (int i = 0; i < nbs.length; i++) {
             Cell c = nbs[i];
-            String n = c.className();
             sum += c.alive ? 1 : 0;
             
-            
-            if (n.equals("TribeMember")) {
-                TribeMember cc = (TribeMember)c;
-                
-                if (cc.tribe.size() > 4) {
-                    alive = false;
-                    if (alive) println("Tribe killed this cell at", x, y);
-                    return this;
-                }
+            if (c.className().equals("TribeMember") && (c.x == x || c.y == y)) {
+                Tribe t = ((TribeMember)c).tribe;
+                if (!tribeNbs.contains(t))
+                    tribeNbs.add(t);
             }
+        }
+        
+        switch(tribeNbs.size())  {
+            case 0 : // act like normal cell if no tribeNbs
+            break;
+            
+            case 1 : // if there is one Tribe, there is a chnce of spawing this cell as a new member; otherwise it becomes / remains dead
+            Tribe t = tribeNbs.get(0);
+            
+            if (random(1) < t.expansionProbability()) {
+                TribeMember newCell = new TribeMember(x, y, t);
+                t.addMember(newCell);
+                println("New Tribe Member spawned at", x, y);
+                return newCell;
+            } else {
+                alive = false;
+                if (alive) println("Tribe killed this cell at", x, y);
+                return this;
+            }
+            
+            default : // if there are more than one tribeNbs, this cell must die / remain dead, as if the tribes were at war and unable to expand
+            alive = false;
+            if (alive) println("Tribe killed this cell at", x, y);
+            return this;
         }
         
         
@@ -131,10 +151,6 @@ class Cell {
         else if (alive && (sum < 2 || sum > 3)) alive = false;
         else if (alive) {
             ArrayList<Cell> directNbs = dfs();
-            
-            // println("\n==>", x, y, directNbs.size());
-            // for (Cell c : directNbs)
-            //     println(c.x, c.y);
             
             if (directNbs.size() < 2) alive = false;
             else if (directNbs.size() > 2) { // sum must be at least 3, which, together with this live cell, makes a total of at least 4 cells ready to form a tribe
@@ -187,7 +203,7 @@ class MemberID {
 
 
 class Tribe {
-    int maxSize = 50;
+    int maxSize = 100;
     ArrayList<MemberID> members = new ArrayList<MemberID>();
     color col;
     
@@ -200,8 +216,13 @@ class Tribe {
         members.add(new MemberID(member.x, member.y));
         return members;
     }
+    
     int size() {
         return members.size();
+    }
+    
+    float expansionProbability() {
+        return 1 - this.size() / float(maxSize);
     }
     
     MemberID centerOfMass() {

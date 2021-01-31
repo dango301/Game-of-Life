@@ -22,6 +22,11 @@ boolean isImporting = false;
 long lastCall = 0;
 long gen = 0;
 
+// Specific to the Tribe-Variation of the game:
+PShape crown;
+PShape helmet;
+PShape swords;
+
 
 void setup() {
     size(800, 600);
@@ -58,6 +63,9 @@ void setup() {
     println();
     println();
     
+    crown = loadShape("crown.svg");
+    helmet = loadShape("helmet.svg");
+    swords = loadShape("swords.svg");
     mySetup(true);
 }
 
