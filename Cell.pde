@@ -131,7 +131,7 @@ class Cell {
             if (random(1) < t.expansionProbability()) {
                 TribeMember newCell = new TribeMember(x, y, t);
                 t.addMember(newCell);
-                println("New Tribe Member spawned at", x, y);
+                // println("New Tribe Member spawned at", x, y);
                 return newCell;
             } else {
                 alive = false;
@@ -201,13 +201,15 @@ class MemberID {
 
 
 class Tribe {
-    int maxSize = 100;
+    int maxSize = 200;
     ArrayList<MemberID> members = new ArrayList<MemberID>();
+    MemberID king;
     color col;
     
     Tribe(color...col) {
         float minC = 75;
         this.col = col.length > 0 ? col[0] : color(random(minC, 255), random(minC, 255), random(minC, 255));
+        allTribes.add(this);
     }
     
     ArrayList<MemberID> addMember(TribeMember member) {
@@ -223,19 +225,32 @@ class Tribe {
         return 1 - this.size() / float(maxSize);
     }
     
-    MemberID centerOfMass() {
+    MemberID king() {
         int xSum = 0; 
         int ySum = 0; 
         
         for (MemberID member : members) {
             xSum += member.x;
-            xSum += member.y;
+            ySum += member.y;
         }
         
         float xAvg = float(xSum) / this.size();
         float yAvg = float(ySum) / this.size();
-        //TODO: return nearest (x, y) pair that belongs to an existing member
-        return members.get(0);
+        
+        FloatList distances = new FloatList();
+        for (MemberID m : members)
+            distances.append(sqrt(sq(m.x - xAvg) + sq(m.y - yAvg)));
+        int index = distances.index(distances.min());
+        // println(xAvg, yAvg, index, distances.min());
+        
+        
+        
+        king = members.get(index);
+        int x = king.x;
+        int y = king.y;
+        shape(crown, x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
+        
+        return king;
     }
 }
 
@@ -281,6 +296,10 @@ class TribeMember extends Cell{
         stroke(0);
         strokeWeight(gridWeight);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
+        
+        // MemberID k = tribe.getKing();
+        // if (k.x == x && k.y == y)
+        //     shape(crown, x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
     }
 }
 

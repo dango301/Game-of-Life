@@ -1,4 +1,4 @@
-
+ArrayList<Tribe> allTribes = new ArrayList<Tribe>();
 
 void nextGeneration() {
     nextGrid = new Cell[cols][rows];
@@ -13,7 +13,8 @@ void nextGeneration() {
             clone.display(); // note: all cells are drawn at once after the loop is done
         }
     }
-    
+    for (Tribe t : allTribes)
+        t.king();
     
     grid = nextGrid;
     gen++;

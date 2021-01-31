@@ -29,8 +29,8 @@ PShape swords;
 
 
 void setup() {
-    size(800, 600);
-    // fullScreen();
+    // size(800, 600);
+    fullScreen();
     
     surface.setTitle("\"The Game of Life\" by Dennis Paust  © 2021");
     surface.setLocation(0, 0);
