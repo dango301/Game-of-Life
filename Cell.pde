@@ -109,10 +109,9 @@ class Cell {
         
         Cell[] nbs = getNeighbours();
         int sum = 0;
-        ArrayList<Tribe> tribeNbs = new ArrayList<Tribe>();
+        ArrayList<Tribe> tribeNbs = new ArrayList<Tribe>(); // all different tribes that are neighbours to this cell
         
-        for (int i = 0; i < nbs.length; i++) {
-            Cell c = nbs[i];
+        for (Cell c : nbs) {
             sum += c.alive ? 1 : 0;
             
             if (c.className().equals("TribeMember") && (c.x == x || c.y == y)) {
@@ -140,10 +139,9 @@ class Cell {
                 return this;
             }
             
-            default : // if there are more than one tribeNbs, this cell must die / remain dead, as if the tribes were at war and unable to expand
-            alive = false;
-            if (alive) println("Tribe killed this cell at", x, y);
-            return this;
+            default : // if there are multiple Tribes surrounding this cell, it becomes a Battlefield-Object
+            println("Tribes going to war at", x, y);
+            return new Battlefield(x, y, tribeNbs);
         }
         
         
@@ -260,7 +258,17 @@ class TribeMember extends Cell{
         for (Cell c : nbs) {
             String n = c.className();
             
-            
+            if (n.equals("TribeMember")) {
+                TribeMember cc = (TribeMember)c;
+                if (cc.tribe != this.tribe) {
+                    return new Warrior(x, y, tribe.size() / float(tribe.maxSize) * 3, 3);
+                }
+            } else if (n.equals("Battlefield")) {
+                Battlefield cc = (Battlefield)c;
+                Warrior newCell = new Warrior(x, y, tribe.size() / float(tribe.maxSize) * 3, 3);
+                cc.addWarrior(newCell);
+                return newCell;
+            }
         }
         
         
@@ -273,5 +281,113 @@ class TribeMember extends Cell{
         stroke(0);
         strokeWeight(gridWeight);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
+    }
+}
+
+class Warrior extends TribeMember {
+    float maxHealth;
+    float strength;
+    float health;
+    
+    Warrior(int x, int y, float strength, float maxHealth, float...health) {
+        super(true, x, y);
+        this.strength = strength;
+        this.maxHealth = maxHealth;
+        this.health = health.length > 0 ? health[0] : maxHealth;
+    }
+    
+    Warrior clone() {
+        return new Warrior(x, y, strength, maxHealth, health);
+    }
+    
+    Cell transition() {
+        Cell[] nbs = getNeighbours();
+        
+        for (Cell c : nbs) {
+            String n = c.className();
+            
+            if (n.equals("Battlefield")) {
+                //TODO: now what?
+                
+            } else if (n.equals("Warrior")) {
+                Warrior w = (Warrior)c;
+                
+                if (w.tribe != this.tribe) {
+                    //TODO: write code for when shit goes down in direct combat
+                }
+            }
+        }
+        
+        return this;
+    }
+    
+    void display() {
+        
+        fill(tribe.col);
+        stroke(0);
+        strokeWeight(gridWeight);
+        rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
+        
+        shape(helmet, x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
+    }
+}
+
+//FIXME: add removeWarrior methods to Party and Battlefield classes
+class Battlefield extends {
+    ArrayList<Party> parties = new ArrayList<Party>();
+    
+    class Party {
+        Tribe tribe;
+        ArrayList<MemberID> warriors = new ArrayList<MemberID>();
+        
+        Party(Tribe tribe) {
+            this.tribe = tribe;
+            this.warriors = warriors;
+        }
+        
+        ArrayList<MemberID> addWarrior(int x, int y) {
+            warriors.add(new MemberID(x, y));
+            return warriors;
+        }
+        
+    }
+    
+    Battlefield(int x, int y, ArrayList<Tribe> tribesAtWar) {
+        super(false, x, y);
+        
+        for (Tribe t : tribesAtWar) {
+            parties.add(new Party(t));
+        }
+    }
+    Battlefield(int x, int y, int, dur, ArrayList<Party>  parties) {
+        super(false, x, y);
+        this.dur = dur;
+        this.parties = parties;
+    }
+    
+    void addWarrior(Warrior w) {
+        for (Party p : parties) {
+            if (p.tribe == w.tribe)
+                p.addWarrior(w.x, w.y);
+        }
+    }
+    
+    void clone() {
+        return new Battlefield(x, y, dur, parties);
+    }
+    
+    Cell transition() {
+        
+        return this;
+    }
+    
+    void display() {
+        
+        fill(255, 0, 0);
+        stroke(0);
+        strokeWeight(gridWeight);
+        rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
+        
+        shape(swords, x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
     }
 }
