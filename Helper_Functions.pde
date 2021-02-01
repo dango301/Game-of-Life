@@ -146,6 +146,12 @@ void drawInitialGrid(boolean dragged) {
     int j = floor((mouseY - offsetY - 40) / res);
     if (i >= cols || j >= rows) return;
     
+    Cell oldCell = grid[i][j];
+    if (oldCell.className().equals("TribeMember") || oldCell.className().equals("Warrior")) {
+        TribeMember cc = (TribeMember)oldCell;
+        cc.tribe.removeMember(cc);
+    }
+    
     Cell c = new Cell(mouseButton == LEFT, i, j);
     grid[i][j] = c;
     c.display();

@@ -110,15 +110,23 @@ class Cell {
         Cell[] nbs = getNeighbours();
         int sum = 0;
         ArrayList<Tribe> tribeNbs = new ArrayList<Tribe>(); // all different tribes that are neighbours to this cell
+        boolean canBecomeMember = false;
         
         for (Cell c : nbs) {
+            String n = c.className();
             sum += c.alive ? 1 : 0;
             
-            if (c.className().equals("TribeMember") && (c.x == x || c.y == y)) {
+            if (n.equals("TribeMember") || n.equals("Warrior")) {
                 Tribe t = ((TribeMember)c).tribe;
+                
+                if (c.x == x || c.y == y)
+                    canBecomeMember = true;
+                
                 if (!tribeNbs.contains(t))
                     tribeNbs.add(t);
-            }
+                
+            } else if (n.equals("Battlefield"))
+                canBecomeMember = false;
         }
         
         switch(tribeNbs.size())  {
@@ -128,7 +136,7 @@ class Cell {
             case 1 : // if there is one Tribe, there is a chnce of spawing this cell as a new member; otherwise it becomes / remains dead
             Tribe t = tribeNbs.get(0);
             
-            if (random(1) < t.expansionProbability()) {
+            if (canBecomeMember && random(1) < t.expansionProbability()) {
                 TribeMember newCell = new TribeMember(x, y, t);
                 t.addMember(newCell);
                 // println("New Tribe Member spawned at", x, y);
@@ -362,14 +370,7 @@ class Warrior extends TribeMember {
                 
                 // it is important the health condition be checked BEFORE subtracting damage because cell must be killed in NEXT generation, as not to modify the ongoing battle of the current generation
                 if (health <= 0) { //Warrior dies in battle
-                    ownParty.removeWarrior(this);
-                    tribe.removeMember(this);
                     println("Warrior has fallen at:", x, y);
-                    
-                    if (ownParty.warriors.size() == 0) { // entire Party loses battle, if all warriors have fallen with this being he last one
-                        b.parties.remove(ownParty);
-                        println("Last Warrior has fallen. Tribe has lost battle.");
-                    }
                     return new Cell(false, x, y); // Warrior becomes a normal, dead Cell
                 }
                 
@@ -455,11 +456,42 @@ class Battlefield extends Cell {
     Cell transition() {
         // TODO: check if new participants joined and add them to war
         
-        if (parties.size() == 0)
+        ArrayList<Party> deadParties = new ArrayList<Party>();
+        for (Party p : parties) {
+            ArrayList<Warrior> deadWarriors = new ArrayList<Warrior>();
+            
+            for (MemberID m : p.warriors) {
+                Cell c = m.get();
+                
+                if (c.className().equals("Warrior")) {
+                    Warrior w = (Warrior)c;
+                    if (w.health <= 0) {
+                        deadWarriors.add(w);
+                    }
+                }
+            }
+            
+            for (Warrior deadWarrior : deadWarriors)
+                p.warriors.remove(deadWarrior);
+            
+            if (p.warriors.size() == 0) {
+                deadParties.add(p);
+                println("Last Warrior has fallen. Tribe has lost battle.");
+            }
+        }
+        for (Party deadP : deadParties) 
+            parties.remove(deadP);
+        
+        
+        
+        if (parties.size() == 0) {
+            println("Battle at", x, y, "is over. No Tribes have emerged victorious.");
             return new Cell(false, x, y);
+        }
         else if (parties.size() == 1) {
             Tribe t = parties.get(0).tribe;
-            return new Warrior(x, y, t, t.size() / float(t.maxSize) * 3, 3);
+            println("Battle at", x, y, "is over. A Tribe has emerged victorious and spawned a new Warrior.");
+            return new Warrior(x, y, t, t.size() / float(t.maxSize) * 3, 3); // where a Battle is won a new Warrior of full health and strength is spawned, in order to continue attacking
         }
         
         
