@@ -216,6 +216,17 @@ class Tribe {
         members.add(new MemberID(member.x, member.y));
         return members;
     }
+    ArrayList<MemberID> removeMember(TribeMember member) {
+        
+        for (int i = 0; i < members.size(); i++) {
+            MemberID m = members.get(i);
+            if (m.x == member.x && m.y == member.y) {
+                members.remove(m);
+                break;
+            }
+        }
+        return members;
+    }
     
     int size() {
         return members.size();
@@ -303,6 +314,9 @@ class TribeMember extends Cell{
     }
 }
 
+//TODO: when king cell is killed destroy entire tribe and delelte it from allTribes[]; only a half of enemy tribe's cells will be added to winning tribe, others die as if destroyed by the war; restore health of all warriors
+//TODO: return new Warrior of winning tribe on Battlefield-Object
+
 class Warrior extends TribeMember {
     float maxHealth;
     float strength;
@@ -326,7 +340,38 @@ class Warrior extends TribeMember {
             String n = c.className();
             
             if (n.equals("Battlefield")) {
-                //TODO: now what?
+                Battlefield b = (Battlefield)c;
+                Party ownParty = null;
+                float damage = 0;
+                
+                // each Warrior from all other parties attack a given Warrior
+                for (Party p : b.parties) {
+                    
+                    if (p.tribe == this.tribe) {
+                        ownParty = p;
+                        continue;
+                    }                    
+                    for (MemberID m : p.warriors) {
+                        Warrior w = (Warrior)m.get();
+                        damage += w.strength;
+                    }
+                }
+                
+                // it is important the health condition be checked BEFORE subtracting damage because cell must be killed in NEXT generation, as not to modify the ongoing battle of the current generation
+                if (health <= 0) { //Warrior dies in battle
+                    ownParty.removeWarrior(this);
+                    tribe.removeMember(this);
+                    println("Warrior has fallen at:", x, y);
+                    
+                    if (ownParty.warriors.size() == 0) { // entire Party loses battle, if all warriors have fallen with this being he last one
+                        b.parties.remove(ownParty);
+                        println("Last Warrior has fallen. Tribe has lost battle.");
+                    }
+                    return new Cell(false, x, y); // Warrior becomes a normal, dead Cell
+                }
+                
+                health -= damage;
+                return this;
                 
             } else if (n.equals("Warrior")) {
                 Warrior w = (Warrior)c;
@@ -351,25 +396,37 @@ class Warrior extends TribeMember {
     }
 }
 
-//FIXME: add removeWarrior methods to Party and Battlefield classes
+
+
+class Party {
+    Tribe tribe;
+    ArrayList<MemberID> warriors = new ArrayList<MemberID>();
+    
+    Party(Tribe tribe) {
+        this.tribe = tribe;
+        this.warriors = warriors;
+    }
+    
+    ArrayList<MemberID> addWarrior(int x, int y) {
+        warriors.add(new MemberID(x, y));
+        return warriors;
+    }
+    
+    ArrayList<MemberID> removeWarrior(Warrior w) {
+        
+        for (int i = 0; i < warriors.size(); i++) {
+            MemberID m = warriors.get(i);
+            if (m.x == w.x && m.y == w.y) {
+                warriors.remove(m);
+                break;
+            }
+        }
+        return warriors;
+    }
+}
+
 class Battlefield extends Cell {
     ArrayList<Party> parties = new ArrayList<Party>();
-    
-    class Party {
-        Tribe tribe;
-        ArrayList<MemberID> warriors = new ArrayList<MemberID>();
-        
-        Party(Tribe tribe) {
-            this.tribe = tribe;
-            this.warriors = warriors;
-        }
-        
-        ArrayList<MemberID> addWarrior(int x, int y) {
-            warriors.add(new MemberID(x, y));
-            return warriors;
-        }
-        
-    }
     
     Battlefield(int x, int y, ArrayList<Tribe> tribesAtWar) {
         super(false, x, y);
@@ -393,7 +450,7 @@ class Battlefield extends Cell {
     }
     
     Cell transition() {
-        
+        // TODO: check if new participants joined and add them to war
         return this;
     }
     
