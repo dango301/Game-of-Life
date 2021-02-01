@@ -194,8 +194,8 @@ class MemberID {
         this.y = y;
     }
     
-    TribeMember get() {
-        return(TribeMember)grid[x][y];
+    Cell get() {
+        return grid[x][y];
     }
 }
 
@@ -315,7 +315,6 @@ class TribeMember extends Cell{
 }
 
 //TODO: when king cell is killed destroy entire tribe and delelte it from allTribes[]; only a half of enemy tribe's cells will be added to winning tribe, others die as if destroyed by the war; restore health of all warriors
-//TODO: return new Warrior of winning tribe on Battlefield-Object
 
 class Warrior extends TribeMember {
     float maxHealth;
@@ -352,7 +351,11 @@ class Warrior extends TribeMember {
                         continue;
                     }                    
                     for (MemberID m : p.warriors) {
-                        Warrior w = (Warrior)m.get();
+                        Cell cc = m.get();
+                        // if a member isn't of class Warrior yet that means that warriors of that generation are still spawning 
+                        if (!cc.className().equals("Warrior")) return this;
+                        
+                        Warrior w = (Warrior)cc;
                         damage += w.strength;
                     }
                 }
@@ -451,6 +454,15 @@ class Battlefield extends Cell {
     
     Cell transition() {
         // TODO: check if new participants joined and add them to war
+        
+        if (parties.size() == 0)
+            return new Cell(false, x, y);
+        else if (parties.size() == 1) {
+            Tribe t = parties.get(0).tribe;
+            return new Warrior(x, y, t, t.size() / float(t.maxSize) * 3, 3);
+        }
+        
+        
         return this;
     }
     
