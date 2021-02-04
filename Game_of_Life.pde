@@ -56,7 +56,7 @@ void setup() {
     println();
     println("Press space to pause / unpause the game");
     println("Press f for current frame rate");
-    println("Press g to get current Generaation");
+    println("Press g to get current generation");
     println("Press n (for next) to only evolve one generation at a time");
     println("Press q to quit the game.");
     println("============================================================================");

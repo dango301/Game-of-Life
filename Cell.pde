@@ -110,7 +110,8 @@ class Cell {
         Cell[] nbs = getNeighbours();
         int sum = 0;
         ArrayList<Tribe> tribeNbs = new ArrayList<Tribe>(); // all different tribes that are neighbours to this cell
-        boolean canBecomeMember = false;
+        boolean hasMemberNb = false; // a normal cell can only become a member, if it has a DIRECT neighbour that is part of a tribe
+        boolean battleInProximity = false; // a normal cell cannot become a tribe member if it is a neighbour to a battlefield
         
         for (Cell c : nbs) {
             String n = c.className();
@@ -120,23 +121,28 @@ class Cell {
                 Tribe t = ((TribeMember)c).tribe;
                 
                 if (c.x == x || c.y == y)
-                    canBecomeMember = true;
+                    hasMemberNb = true;
                 
                 if (!tribeNbs.contains(t))
                     tribeNbs.add(t);
                 
             } else if (n.equals("Battlefield"))
-                canBecomeMember = false;
+                battleInProximity = true;
         }
         
         switch(tribeNbs.size())  {
             case 0 : // act like normal cell if no tribeNbs
             break;
             
-            case 1 : // if there is one Tribe, there is a chnce of spawing this cell as a new member; otherwise it becomes / remains dead
+            case 1 : // if there is one Tribe and this cell fulfills the criteria, there is a chance of spawing this cell as a new member; otherwise it is killed / remains dead
             Tribe t = tribeNbs.get(0);
+            boolean newMemberConditions =
+            hasMemberNb
+            && !battleInProximity
+            && !t.inBattle
+            && random(1) < t.expansionProbability();
             
-            if (canBecomeMember && random(1) < t.expansionProbability()) {
+            if (newMemberConditions) {
                 TribeMember newCell = new TribeMember(x, y, t);
                 t.addMember(newCell);
                 // println("New Tribe Member spawned at", x, y);
@@ -147,7 +153,9 @@ class Cell {
                 return this;
             }
             
-            default : // if there are multiple Tribes surrounding this cell, it becomes a Battlefield-Object
+            default : // if there are multiple Tribes surrounding this cell, it becomes a Battlefield
+            for (Tribe nbsTribe : tribeNbs)
+                nbsTribe.inBattle = true;
             println("Tribes going to war at", x, y);
             return new Battlefield(x, y, tribeNbs);
         }
@@ -166,7 +174,7 @@ class Cell {
                 newTribe.addMember(newCell);
                 
                 for (Cell c : directNbs)
-                    grid[c.x][c.y].nextTribe = newTribe; // change property in original grid so following cells can join that tribe instead of creating a new one
+                    grid[c.x][c.y].nextTribe = newTribe; // change property in original grid (this method is not recommended at all, though!) so following cells can join that tribe instead of creating a new one
                 
                 println("Created new Tribe at", x, y);
                 return newCell;
@@ -213,6 +221,7 @@ class Tribe {
     ArrayList<MemberID> members = new ArrayList<MemberID>();
     MemberID king;
     color col;
+    boolean inBattle = false;
     
     Tribe(color...col) {
         float minC = 75;
@@ -244,7 +253,7 @@ class Tribe {
         return 1 - this.size() / float(maxSize);
     }
     
-    MemberID king() {
+    MemberID king() { // determine which cell is king of tribe and display it
         int xSum = 0; 
         int ySum = 0; 
         
@@ -258,17 +267,12 @@ class Tribe {
         
         FloatList distances = new FloatList();
         for (MemberID m : members)
-            distances.append(sqrt(sq(m.x - xAvg) + sq(m.y - yAvg)));
+            distances.append(sqrt(sq(m.x - xAvg) + sq(m.y - yAvg))); // using Pythagoras theorem to find closest cell to center of mass of entire tribe
         int index = distances.index(distances.min());
-        // println(xAvg, yAvg, index, distances.min());
-        
         
         
         king = members.get(index);
-        int x = king.x;
-        int y = king.y;
-        shape(crown, x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
-        
+        shape(crown,  king.x * res + offsetX, king.y * res + offsetY + 40, res - gridWeight, res - gridWeight);
         return king;
     }
 }
@@ -288,23 +292,31 @@ class TribeMember extends Cell{
     
     Cell transition() {
         Cell[] nbs = getNeighbours();
+        ArrayList<Battlefield> battlesInProximity = new ArrayList<Battlefield>();
+        ArrayList<TribeMember> enemiesInProximity = new ArrayList<TribeMember>();
         
         for (Cell c : nbs) {
             String n = c.className();
             
-            if (n.equals("TribeMember")) {
-                TribeMember cc = (TribeMember)c;
-                if (cc.tribe != this.tribe) {
-                    return new Warrior(x, y, tribe, tribe.size() / float(tribe.maxSize) * 3, 3);
-                }
-            } else if (n.equals("Battlefield")) {
-                Battlefield cc = (Battlefield)c;
+            if (n.equals("Battlefield"))
+                battlesInProximity.add((Battlefield)c);
+            else if (n.equals("TribeMember")) {
+                if (((TribeMember)c).tribe != this.tribe)
+                    enemiesInProximity.add((TribeMember)c);
+            }
+            
+            if (battlesInProximity.size() > 0) {
+                
                 Warrior newCell = new Warrior(x, y, tribe, tribe.size() / float(tribe.maxSize) * 3, 3);
-                cc.addWarrior(newCell);
+                for (Battlefield b : battlesInProximity)
+                    b.addWarrior(newCell);
                 return newCell;
             }
+            
+            if (enemiesInProximity.size() > 0)
+                return new Warrior(x, y, tribe, tribe.size() / float(tribe.maxSize) * 3, 3);
+            
         }
-        
         
         return this;
     }
@@ -315,10 +327,6 @@ class TribeMember extends Cell{
         stroke(0);
         strokeWeight(gridWeight);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
-        
-        // MemberID k = tribe.getKing();
-        // if (k.x == x && k.y == y)
-        //     shape(crown, x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
     }
 }
 
@@ -342,41 +350,27 @@ class Warrior extends TribeMember {
     
     Cell transition() {
         Cell[] nbs = getNeighbours();
+        float damage = 0;
         
         for (Cell c : nbs) {
             String n = c.className();
             
             if (n.equals("Battlefield")) {
                 Battlefield b = (Battlefield)c;
-                Party ownParty = null;
-                float damage = 0;
                 
-                // each Warrior from all other parties attack a given Warrior
+                // each Warrior from every other party attacks this Warrior
                 for (Party p : b.parties) {
+                    if (p.tribe == this.tribe) continue;
                     
-                    if (p.tribe == this.tribe) {
-                        ownParty = p;
-                        continue;
-                    }                    
                     for (MemberID m : p.warriors) {
                         Cell cc = m.get();
                         // if a member isn't of class Warrior yet that means that warriors of that generation are still spawning 
-                        if (!cc.className().equals("Warrior")) return this;
-                        
-                        Warrior w = (Warrior)cc;
-                        damage += w.strength;
+                        // if (!cc.className().equals("Warrior")) {
+                        //     println("Warrior at", x, y, "could not be attacked by cell at", cc.x, cc.y, "because it was registered to battlefield without being off class Warrior");
+                        //     return this;
+                        damage += ((Warrior)cc).strength;
                     }
                 }
-                
-                // it is important the health condition be checked BEFORE subtracting damage because cell must be killed in NEXT generation, as not to modify the ongoing battle of the current generation
-                if (health <= 0) { //Warrior dies in battle
-                    println("Warrior has fallen at:", x, y);
-                    return new Cell(false, x, y); // Warrior becomes a normal, dead Cell
-                }
-                
-                health -= damage;
-                return this;
-                
             } else if (n.equals("Warrior")) {
                 Warrior w = (Warrior)c;
                 
@@ -386,12 +380,20 @@ class Warrior extends TribeMember {
             }
         }
         
+        // it is important the health condition be checked BEFORE subtracting damage because cell must be killed in NEXT generation, as not to modify the ongoing battle of the current generation
+        if (health <= 0) { //Warrior dies in battle
+            println("Warrior has fallen at:", x, y);
+            return new Cell(false, x, y); // Warrior becomes a normal, dead Cell
+        }
+        
+        health -= damage;
         return this;
     }
     
+    
     void display() {
         
-        fill(tribe.col);
+        fill(tribe.col); //TODO: make color intensity proportional to health / maxHealth
         stroke(0);
         strokeWeight(gridWeight);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
