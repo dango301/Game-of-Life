@@ -221,11 +221,11 @@ class Tribe {
     ArrayList<MemberID> members = new ArrayList<MemberID>();
     MemberID king;
     color col;
+    float minColorValue = 75;
     boolean inBattle = false;
     
     Tribe(color...col) {
-        float minC = 75;
-        this.col = col.length > 0 ? col[0] : color(random(minC, 255), random(minC, 255), random(minC, 255));
+        this.col = col.length > 0 ? col[0] : color(random(minColorValue, 255), random(minColorValue, 255), random(minColorValue, 255));
         allTribes.add(this);
     }
     
@@ -351,6 +351,7 @@ class Warrior extends TribeMember {
     Cell transition() {
         Cell[] nbs = getNeighbours();
         float damage = 0;
+        ArrayList<Warrior> previousAttackers = new ArrayList<Warrior>();
         
         for (Cell c : nbs) {
             String n = c.className();
@@ -364,11 +365,21 @@ class Warrior extends TribeMember {
                     
                     for (MemberID m : p.warriors) {
                         Cell cc = m.get();
+                        
                         // if a member isn't of class Warrior yet that means that warriors of that generation are still spawning 
-                        // if (!cc.className().equals("Warrior")) {
-                        //     println("Warrior at", x, y, "could not be attacked by cell at", cc.x, cc.y, "because it was registered to battlefield without being off class Warrior");
-                        //     return this;
-                        damage += ((Warrior)cc).strength;
+                        if (!cc.className().equals("Warrior")) { //FIXME:
+                            println("Warrior at", x, y, "could not be attacked by cell at", cc.x, cc.y, "because it was registered to battlefield without being off class Warrior");
+                            return this;
+                        }
+                        
+                        Warrior w = (Warrior)cc;
+                        if (previousAttackers.contains(w)) {
+                            println("prevented double attack by", w.x, w.y, "at", x, y);
+                            continue;
+                        }
+                        
+                        previousAttackers.add(w);
+                        damage += w.strength;
                     }
                 }
             } else if (n.equals("Warrior")) {
@@ -380,6 +391,7 @@ class Warrior extends TribeMember {
             }
         }
         
+        println(x, y, health);
         // it is important the health condition be checked BEFORE subtracting damage because cell must be killed in NEXT generation, as not to modify the ongoing battle of the current generation
         if (health <= 0) { //Warrior dies in battle
             println("Warrior has fallen at:", x, y);
@@ -392,8 +404,12 @@ class Warrior extends TribeMember {
     
     
     void display() {
+        //FIXME: not working
+        float r = map(health / maxHealth, 0, 1, tribe.minColorValue, red(tribe.col));
+        float g = map(health / maxHealth, 0, 1, tribe.minColorValue, green(tribe.col));
+        float b = map(health / maxHealth, 0, 1, tribe.minColorValue, blue(tribe.col));
         
-        fill(tribe.col); //TODO: make color intensity proportional to health / maxHealth
+        fill(r, g, b);
         stroke(0);
         strokeWeight(gridWeight);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
@@ -456,7 +472,6 @@ class Battlefield extends Cell {
     }
     
     Cell transition() {
-        // TODO: check if new participants joined and add them to war
         
         ArrayList<Party> deadParties = new ArrayList<Party>();
         for (Party p : parties) {
@@ -486,14 +501,50 @@ class Battlefield extends Cell {
         
         
         
-        if (parties.size() == 0) {
-            println("Battle at", x, y, "is over. No Tribes have emerged victorious.");
-            return new Cell(false, x, y);
-        }
-        else if (parties.size() == 1) {
+        /*if (parties.size() == 0) {
+        println("Battle at", x, y, "is over. No Tribes have emerged victorious.");
+        return new Cell(false, x, y);
+    }
+        else*/ if (parties.size() == 1) {
             Tribe t = parties.get(0).tribe;
             println("Battle at", x, y, "is over. A Tribe has emerged victorious and spawned a new Warrior.");
             return new Warrior(x, y, t, t.size() / float(t.maxSize) * 3, 3); // where a Battle is won a new Warrior of full health and strength is spawned, in order to continue attacking
+        }
+        
+        
+        Cell[] nbs = getNeighbours();
+        for (Cell c : nbs) {
+            String n = c.className();
+            
+            if (n.equals("Warrior")) {
+                Warrior w = (Warrior)c;
+                boolean notInBattlefield = true;
+                Party ownParty;
+                
+                for (Party p : parties) {
+                    if (p.tribe == w.tribe) {
+                        for (MemberID m : p.warriors) {
+                            if (m.x == w.x && m.y == m.y) {
+                                notInBattlefield = false;
+                                break;
+                            }
+                        }
+                        if (notInBattlefield) { // if Warrior's tribe is found but he isn't in battle, add warrior to party
+                            p.addWarrior(w.x, w.y);
+                            notInBattlefield = false;
+                            break;
+                        }
+                    }
+                    
+                }
+                if (notInBattlefield) { // if variable wans't changed in loop, that means that his party wasn't registered at all and must be added with the warrior
+                    Party p = new Party(w.tribe);
+                    parties.add(p);
+                    p.addWarrior(w.x, w.y);
+                    println("new Tribe with warrior at", w.x, w.y, "joined Battlefield at", x, y);
+                }
+            }
+            
         }
         
         

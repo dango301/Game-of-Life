@@ -1,8 +1,6 @@
 ArrayList<Tribe> allTribes = new ArrayList<Tribe>();
 
 void nextGeneration() {
-    println();
-    println();
     nextGrid = new Cell[cols][rows];
     
     

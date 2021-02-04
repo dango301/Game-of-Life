@@ -170,7 +170,24 @@ void mousePressed() {
     if (mouseButton == CENTER) {
         int i = floor((mouseX - offsetX) / res);
         int j = floor((mouseY - offsetY - 40) / res);
-        println("Clicked on Cell:", i, j, grid[i][j].className(), "#nbs:", grid[i][j].dfs().size());
+        Cell c = grid[i][j];
+        
+        println();
+        println("Clicked on Cell:", i, j, c.className(), "#nbs:", grid[i][j].dfs().size());
+        if (c.className().equals("Warrior"))
+            println("Health:",((Warrior)c).health);
+        
+        if (c.className().equals("Battlefield")) {
+            println("Battlefield includes:");
+            for (Party p : ((Battlefield)c).parties) {
+                println("Tribe", p.tribe);
+                for (MemberID m : p.warriors) {
+                    println("Warrior at", m.x, m.y, ", Health:",((Warrior)m.get()).health);
+                }
+            }
+        }
+        
+        
         return;
     }
     
