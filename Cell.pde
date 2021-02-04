@@ -368,7 +368,7 @@ class Warrior extends TribeMember {
                         
                         // if a member isn't of class Warrior yet that means that warriors of that generation are still spawning 
                         if (!cc.className().equals("Warrior")) { //FIXME:
-                            println("Warrior at", x, y, "could not be attacked by cell at", cc.x, cc.y, "because it was registered to battlefield without being off class Warrior");
+                            println("Warrior at", x, y, "could not be attacked by cell at", cc.x, cc.y, "because it was registered to battlefield at", b.x, b.y, "without being off class Warrior");
                             return this;
                         }
                         
@@ -391,7 +391,7 @@ class Warrior extends TribeMember {
             }
         }
         
-        println(x, y, health);
+        // println(x, y, health);
         // it is important the health condition be checked BEFORE subtracting damage because cell must be killed in NEXT generation, as not to modify the ongoing battle of the current generation
         if (health <= 0) { //Warrior dies in battle
             println("Warrior has fallen at:", x, y);

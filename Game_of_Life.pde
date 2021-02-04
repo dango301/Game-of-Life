@@ -180,9 +180,9 @@ void mousePressed() {
         if (c.className().equals("Battlefield")) {
             println("Battlefield includes:");
             for (Party p : ((Battlefield)c).parties) {
-                println("Tribe", p.tribe);
+                println("   Tribe", p.tribe, "with following warriors:");
                 for (MemberID m : p.warriors) {
-                    println("Warrior at", m.x, m.y, ", Health:",((Warrior)m.get()).health);
+                    println("       Warrior at", m.x, m.y, "| Health:",((Warrior)m.get()).health);
                 }
             }
         }
