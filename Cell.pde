@@ -369,12 +369,12 @@ class Warrior extends TribeMember {
                         // if a member isn't of class Warrior yet that means that warriors of that generation are still spawning 
                         if (!cc.className().equals("Warrior")) { //FIXME:
                             println("Warrior at", x, y, "could not be attacked by cell at", cc.x, cc.y, "because it was registered to battlefield at", b.x, b.y, "without being off class Warrior");
-                            return this;
+                            continue;
                         }
                         
                         Warrior w = (Warrior)cc;
                         if (previousAttackers.contains(w)) {
-                            println("prevented double attack by", w.x, w.y, "at", x, y);
+                            // println("prevented double attack by", w.x, w.y, "at", x, y);
                             continue;
                         }
                         
@@ -449,9 +449,11 @@ class Party {
 
 class Battlefield extends Cell {
     ArrayList<Party> parties = new ArrayList<Party>();
+    long iGen; // generation in which batlefield was initialized; needed so that Battlefield cell does not begin transitioning before all the other Cells around it have also transitioned
     
-    Battlefield(int x, int y, ArrayList<Tribe> tribesAtWar) {
+    Battlefield(int x, int y, ArrayList<Tribe> tribesAtWar, long...iGen) {
         super(false, x, y);
+        this.iGen = iGen.length > 0 ? iGen[0] : gen;
         
         for (Tribe t : tribesAtWar) {
             parties.add(new Party(t));
@@ -466,12 +468,13 @@ class Battlefield extends Cell {
     }
     
     Battlefield clone() {
-        Battlefield b = new Battlefield(x, y, new ArrayList<Tribe>());
+        Battlefield b = new Battlefield(x, y, new ArrayList<Tribe>(), iGen);
         b.parties = this.parties;
         return b;
     }
     
     Cell transition() {
+        if (gen <= iGen + 1) return this; // generation must be at least two greater than the generation in which Battlefield was initialized to guarantee all nbs have spawned
         
         ArrayList<Party> deadParties = new ArrayList<Party>();
         for (Party p : parties) {
