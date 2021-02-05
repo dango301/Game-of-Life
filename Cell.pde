@@ -404,14 +404,12 @@ class Warrior extends TribeMember {
     
     
     void display() {
-        //FIXME: not working
-        float r = map(health / maxHealth, 0, 1, tribe.minColorValue, red(tribe.col));
-        float g = map(health / maxHealth, 0, 1, tribe.minColorValue, green(tribe.col));
-        float b = map(health / maxHealth, 0, 1, tribe.minColorValue, blue(tribe.col));
         
-        fill(r, g, b);
         stroke(0);
         strokeWeight(gridWeight);
+        fill(0);
+        rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight); // draw black box under rect for darker cell from alpha effect
+        fill(tribe.col, 150 + 105 * health / maxHealth);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
         
         shape(helmet, x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
