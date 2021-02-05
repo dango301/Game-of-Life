@@ -210,7 +210,7 @@ class MemberID {
         this.y = y;
     }
     
-    Cell get() {
+    Cell getCell() {
         return grid[x][y];
     }
 }
@@ -229,20 +229,27 @@ class Tribe {
         allTribes.add(this);
     }
     
-    ArrayList<MemberID> addMember(TribeMember member) {
+    void addMember(TribeMember member) {
+        
+        for (MemberID m : members) {
+            if (m.x == member.x && m.y == member.y) {
+                println("MemberID was not added to Tribe because it is already registered for TribeMember at", member.x, member.y);
+                return;
+            }
+        }
         members.add(new MemberID(member.x, member.y));
-        return members;
     }
-    ArrayList<MemberID> removeMember(TribeMember member) {
+    
+    void removeMember(int x, int y) {
         
         for (int i = 0; i < members.size(); i++) {
             MemberID m = members.get(i);
-            if (m.x == member.x && m.y == member.y) {
+            if (m.x == x && m.y == y) {
                 members.remove(m);
-                break;
+                return;
             }
         }
-        return members;
+        throw new Error("MemberID could not be removed becuase it was never registered to tribe at" + x + " " + y);
     }
     
     int size() {
@@ -251,6 +258,18 @@ class Tribe {
     
     float expansionProbability() {
         return 1 - this.size() / float(maxSize);
+    }
+    
+    void update() { // remove all TribeMembers that were killed / removed in the previous generation
+        ArrayList<MemberID> deletedMembers = new ArrayList<MemberID>();
+        for (MemberID m : members) {
+            String n = m.getCell().className();
+            if (!n.equals("TribeMember") && !n.equals("Warrior"))
+                deletedMembers.add(m);
+        }
+        
+        for (MemberID m : deletedMembers)
+            removeMember(m.x, m.y);
     }
     
     MemberID king() { // determine which cell is king of tribe and display it
@@ -364,7 +383,7 @@ class Warrior extends TribeMember {
                     if (p.tribe == this.tribe) continue;
                     
                     for (MemberID m : p.warriors) {
-                        Cell cc = m.get();
+                        Cell cc = m.getCell();
                         
                         // if a member isn't of class Warrior yet that means that warriors of that generation are still spawning 
                         if (!cc.className().equals("Warrior")) { //FIXME:
@@ -479,7 +498,7 @@ class Battlefield extends Cell {
             ArrayList<Warrior> deadWarriors = new ArrayList<Warrior>();
             
             for (MemberID m : p.warriors) {
-                Cell c = m.get();
+                Cell c = m.getCell();
                 
                 if (c.className().equals("Warrior")) {
                     Warrior w = (Warrior)c;

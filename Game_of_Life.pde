@@ -23,6 +23,7 @@ long lastCall = 0;
 long gen = 0;
 
 // Specific to the Tribe-Variation of the game:
+ArrayList<Tribe> allTribes = new ArrayList<Tribe>();
 PShape crown;
 PShape helmet;
 PShape swords;
@@ -182,7 +183,7 @@ void mousePressed() {
             for (Party p : ((Battlefield)c).parties) {
                 println("\tTribe", p.tribe, "with following warriors:");
                 for (MemberID m : p.warriors) {
-                    println("\t\tWarrior at", m.x, m.y, "| Health:",((Warrior)m.get()).health);
+                    println("\t\tWarrior at", m.x, m.y, "| Health:",((Warrior)m.getCell()).health);
                 }
             }
         }

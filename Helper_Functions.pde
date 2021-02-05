@@ -1,7 +1,9 @@
-ArrayList<Tribe> allTribes = new ArrayList<Tribe>();
 
 void nextGeneration() {
     nextGrid = new Cell[cols][rows];
+    
+    for (Tribe t : allTribes)
+        t.update();
     
     
     for (int i = 0; i < cols; i++) {
@@ -13,6 +15,8 @@ void nextGeneration() {
             clone.display(); // note: all cells are drawn at once after the loop is done
         }
     }
+    
+    
     for (Tribe t : allTribes)
         t.king();
     
@@ -149,7 +153,7 @@ void drawInitialGrid(boolean dragged) {
     Cell oldCell = grid[i][j];
     if (oldCell.className().equals("TribeMember") || oldCell.className().equals("Warrior")) {
         TribeMember cc = (TribeMember)oldCell;
-        cc.tribe.removeMember(cc);
+        cc.tribe.removeMember(cc.x, cc.y);
     }
     
     Cell c = new Cell(mouseButton == LEFT, i, j);
