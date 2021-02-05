@@ -249,7 +249,7 @@ class Tribe {
                 return;
             }
         }
-        throw new Error("MemberID could not be removed becuase it was never registered to tribe at" + x + " " + y);
+        println("MemberID could not be removed becuase it was never registered to tribe at" + x + " " + y);
     }
     
     int size() {
@@ -368,6 +368,14 @@ class Warrior extends TribeMember {
     }
     
     Cell transition() {
+        
+        // it is important the health condition be checked BEFORE subtracting damage because cell must be killed in NEXT generation, as not to modify the ongoing battle of the current generation
+        if (health <= 0) { //Warrior dies in battle
+            println("Warrior has fallen at:", x, y);
+            return new Cell(false, x, y); // Warrior becomes a normal, dead Cell
+        }
+        
+        
         Cell[] nbs = getNeighbours();
         float damage = 0;
         ArrayList<Warrior> previousAttackers = new ArrayList<Warrior>();
@@ -405,18 +413,19 @@ class Warrior extends TribeMember {
                 Warrior w = (Warrior)c;
                 
                 if (w.tribe != this.tribe) {
-                    //TODO: write code for when shit goes down in direct combat
+                    
+                    if (previousAttackers.contains(w)) {
+                        // println("prevented double attack by", w.x, w.y, "at", x, y);
+                        continue;
+                    }
+                    
+                    previousAttackers.add(w);
+                    damage += w.strength;
                 }
             }
         }
         
         // println(x, y, health);
-        // it is important the health condition be checked BEFORE subtracting damage because cell must be killed in NEXT generation, as not to modify the ongoing battle of the current generation
-        if (health <= 0) { //Warrior dies in battle
-            println("Warrior has fallen at:", x, y);
-            return new Cell(false, x, y); // Warrior becomes a normal, dead Cell
-        }
-        
         health -= damage;
         return this;
     }
