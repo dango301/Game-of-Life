@@ -46,8 +46,6 @@ class Cell {
     ArrayList<Cell> dfs() { // depth-first search that returns amount of directly connected cells of the same class as cell that dfs() was called on
         grid[x][y].discovered = true; // target grid cell not this.discovered because that property would belong to the clone, not what the neighbourse would be searching for
         
-        // println();
-        // println();
         if (!alive) return new ArrayList<Cell>();
         ArrayList<Cell> sum = new ArrayList<Cell>();
         
@@ -65,9 +63,6 @@ class Cell {
                 grid[i][j].discovered = false;
             }
         }
-        // println("==>", x, y, sum.size());
-        // for (Cell c : sum)
-        //     println(c.x, c.y);
         
         return sum;
     }
@@ -88,9 +83,6 @@ class Cell {
         }
         
         sum.add(this);
-        // println("->", x, y, sum.size());
-        // for (Cell c : sum)
-        //     println(c.x, c.y);
         
         return sum;
     }
@@ -149,7 +141,7 @@ class Cell {
                 return newCell;
             } else {
                 alive = false;
-                if (alive) println("Tribe killed this cell at", x, y);
+                // if (alive) println("Tribe killed this cell at", x, y);
                 return this;
             }
             
@@ -249,7 +241,7 @@ class Tribe {
                 return;
             }
         }
-        println("MemberID could not be removed becuase it was never registered to tribe at " + x + " " + y);
+        println("MemberID could not be removed because it was never registered to tribe at " + x + " " + y);
     }
     
     int size() {
@@ -261,8 +253,8 @@ class Tribe {
     }
     
     void update() { // remove all TribeMembers that were killed / removed in the previous generation
-        
-        if (king != null) {
+
+        if (hasFallenTo == null && king != null) {
             Cell k = king.getCell();
             String n = k.className();
 
@@ -534,7 +526,7 @@ class Battlefield extends Cell {
         
         if (parties.size() == 0) {
             
-            println("Battle at", x, y, "is over. No Tribe has emerged victorious.");
+            // println("Battle at", x, y, "is over. No Tribe has emerged victorious.");
             return new Cell(false, x, y);
             
         } else if (parties.size() == 1) {
