@@ -1,5 +1,7 @@
 // Icons designed by Freepik from www.flaticon.com
 //TODO: put icon attirbution in readme
+//TODO: when king cell is killed destroy entire tribe and delelte it from allTribes[]; only a half of enemy tribe's cells will be added to winning tribe, others die as if destroyed by the war; restore health of all warriors
+
 
 class Cell {
     boolean alive;
@@ -157,7 +159,7 @@ class Cell {
             for (Tribe nbsTribe : tribeNbs)
                 nbsTribe.inBattle = true;
             println("Tribes going to war at", x, y);
-            return new Battlefield(x, y, tribeNbs);
+            return new Battlefield(x, y);
         }
         
         
@@ -249,7 +251,7 @@ class Tribe {
                 return;
             }
         }
-        println("MemberID could not be removed becuase it was never registered to tribe at" + x + " " + y);
+        println("MemberID could not be removed becuase it was never registered to tribe at " + x + " " + y);
     }
     
     int size() {
@@ -311,31 +313,18 @@ class TribeMember extends Cell{
     
     Cell transition() {
         Cell[] nbs = getNeighbours();
-        ArrayList<Battlefield> battlesInProximity = new ArrayList<Battlefield>();
-        ArrayList<TribeMember> enemiesInProximity = new ArrayList<TribeMember>();
         
         for (Cell c : nbs) {
             String n = c.className();
             
-            if (n.equals("Battlefield"))
-                battlesInProximity.add((Battlefield)c);
-            else if (n.equals("TribeMember")) {
-                if (((TribeMember)c).tribe != this.tribe)
-                    enemiesInProximity.add((TribeMember)c);
-            }
+            boolean battleConditions = // Warrior is spawned, if there is a Battlefield or TribeMember / Warrior of a different Tribe
+            n.equals("Battlefield")
+                || ((n.equals("TribeMember") || n.equals("Warrior")) && ((TribeMember)c).tribe != this.tribe);
             
-            if (battlesInProximity.size() > 0) {
-                
-                Warrior newCell = new Warrior(x, y, tribe, tribe.size() / float(tribe.maxSize) * 3, 3);
-                for (Battlefield b : battlesInProximity)
-                    b.addWarrior(newCell);
-                return newCell;
-            }
-            
-            if (enemiesInProximity.size() > 0)
+            if (battleConditions)
                 return new Warrior(x, y, tribe, tribe.size() / float(tribe.maxSize) * 3, 3);
-            
         }
+        
         
         return this;
     }
@@ -349,7 +338,6 @@ class TribeMember extends Cell{
     }
 }
 
-//TODO: when king cell is killed destroy entire tribe and delelte it from allTribes[]; only a half of enemy tribe's cells will be added to winning tribe, others die as if destroyed by the war; restore health of all warriors
 
 class Warrior extends TribeMember {
     float maxHealth;
@@ -369,50 +357,23 @@ class Warrior extends TribeMember {
     
     Cell transition() {
         
-        // it is important the health condition be checked BEFORE subtracting damage because cell must be killed in NEXT generation, as not to modify the ongoing battle of the current generation
-        if (health <= 0) { //Warrior dies in battle
-            println("Warrior has fallen at:", x, y);
-            return new Cell(false, x, y); // Warrior becomes a normal, dead Cell
-        }
-        
-        
         Cell[] nbs = getNeighbours();
-        float damage = 0;
         ArrayList<Warrior> previousAttackers = new ArrayList<Warrior>();
+        ArrayList<Tribe> enemyTribes = new ArrayList<Tribe>();
+        FloatList tribeDamage = new FloatList();
         
         for (Cell c : nbs) {
             String n = c.className();
             
             if (n.equals("Battlefield")) {
-                Battlefield b = (Battlefield)c;
+                Cell[] participants = ((Battlefield)c).getNeighbours();
                 
-                // each Warrior from every other party attacks this Warrior
-                for (Party p : b.parties) {
-                    if (p.tribe == this.tribe) continue;
+                for (Cell p : participants) {
+                    if (!p.className().equals("Warrior")) continue;
                     
-                    for (MemberID m : p.warriors) {
-                        Cell cc = m.getCell();
-                        
-                        // if a member isn't of class Warrior yet that means that warriors of that generation are still spawning 
-                        if (!cc.className().equals("Warrior")) { //FIXME:
-                            println("Warrior at", x, y, "could not be attacked by cell at", cc.x, cc.y, "because it was registered to battlefield at", b.x, b.y, "without being off class Warrior");
-                            continue;
-                        }
-                        
-                        Warrior w = (Warrior)cc;
-                        if (previousAttackers.contains(w)) {
-                            // println("prevented double attack by", w.x, w.y, "at", x, y);
-                            continue;
-                        }
-                        
-                        previousAttackers.add(w);
-                        damage += w.strength;
-                    }
-                }
-            } else if (n.equals("Warrior")) {
-                Warrior w = (Warrior)c;
-                
-                if (w.tribe != this.tribe) {
+                    // each Warrior from every other party attacks this Warrior
+                    Warrior w = (Warrior)p;
+                    if (w.tribe == this.tribe) continue; // don't be attacked by Warriors from same Tribe
                     
                     if (previousAttackers.contains(w)) {
                         // println("prevented double attack by", w.x, w.y, "at", x, y);
@@ -420,13 +381,51 @@ class Warrior extends TribeMember {
                     }
                     
                     previousAttackers.add(w);
-                    damage += w.strength;
+                    if (!enemyTribes.contains(w.tribe)) {
+                        enemyTribes.add(w.tribe);
+                        tribeDamage.append(0.0);
+                    }
+                    
+                    int i = enemyTribes.indexOf(w.tribe);
+                    tribeDamage.add(i, w.strength);
                 }
+                
+                
+            } else if (n.equals("Warrior")) {
+                
+                Warrior w = (Warrior)c;
+                if (w.tribe == this.tribe) continue; // don't be attacked by Warriors from same Tribe
+                
+                if (previousAttackers.contains(w)) {
+                    // println("prevented double attack by", w.x, w.y, "at", x, y);
+                    continue;
+                }
+                
+                previousAttackers.add(w);
+                if (!enemyTribes.contains(w.tribe)) {
+                    enemyTribes.add(w.tribe);
+                    tribeDamage.append(0.0);
+                }
+                
+                int i = enemyTribes.indexOf(w.tribe);
+                tribeDamage.add(i, w.strength);
             }
         }
         
-        // println(x, y, health);
-        health -= damage;
+        
+        for (Float damage : tribeDamage)
+            health -= damage;
+        
+        if (health <= 0) { //Warrior dies in battle
+            
+            int index = tribeDamage.index(tribeDamage.max()); // whoever dealt the most damage in the final generation of this Warrior is pronounced its killer
+            Tribe t = enemyTribes.get(index);
+            
+            // println("Warrior has fallen and a new Warrior of the winning Tribe has taken his place to continue into battle at", x, y);
+            return new Warrior(x, y, t, t.size() / float(t.maxSize) * 3, 3); // killer spawns new Warrior in his place because he is the winner of the battle
+        }
+        
+        
         return this;
     }
     
@@ -437,6 +436,7 @@ class Warrior extends TribeMember {
         strokeWeight(gridWeight);
         fill(0);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight); // draw black box under rect for darker cell from alpha effect
+        
         fill(tribe.col, 150 + 105 * health / maxHealth);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
         
@@ -446,134 +446,45 @@ class Warrior extends TribeMember {
 
 
 
-class Party {
-    Tribe tribe;
-    ArrayList<MemberID> warriors = new ArrayList<MemberID>();
-    
-    Party(Tribe tribe) {
-        this.tribe = tribe;
-        this.warriors = warriors;
-    }
-    
-    ArrayList<MemberID> addWarrior(int x, int y) {
-        warriors.add(new MemberID(x, y));
-        return warriors;
-    }
-    
-    ArrayList<MemberID> removeWarrior(Warrior w) {
-        
-        for (int i = 0; i < warriors.size(); i++) {
-            MemberID m = warriors.get(i);
-            if (m.x == w.x && m.y == w.y) {
-                warriors.remove(m);
-                break;
-            }
-        }
-        return warriors;
-    }
-}
-
 class Battlefield extends Cell {
-    ArrayList<Party> parties = new ArrayList<Party>();
-    long iGen; // generation in which batlefield was initialized; needed so that Battlefield cell does not begin transitioning before all the other Cells around it have also transitioned
+    boolean waitForWarriorsToSpawn = true;
     
-    Battlefield(int x, int y, ArrayList<Tribe> tribesAtWar, long...iGen) {
+    Battlefield(int x, int y) {
         super(false, x, y);
-        this.iGen = iGen.length > 0 ? iGen[0] : gen;
-        
-        for (Tribe t : tribesAtWar) {
-            parties.add(new Party(t));
-        }
-    }
-    
-    void addWarrior(Warrior w) {
-        for (Party p : parties) {
-            if (p.tribe == w.tribe)
-                p.addWarrior(w.x, w.y);
-        }
     }
     
     Battlefield clone() {
-        Battlefield b = new Battlefield(x, y, new ArrayList<Tribe>(), iGen);
-        b.parties = this.parties;
-        return b;
+        return new Battlefield(x, y);
     }
     
     Cell transition() {
-        if (gen <= iGen + 1) return this; // generation must be at least two greater than the generation in which Battlefield was initialized to guarantee all nbs have spawned
-        
-        ArrayList<Party> deadParties = new ArrayList<Party>();
-        for (Party p : parties) {
-            ArrayList<Warrior> deadWarriors = new ArrayList<Warrior>();
-            
-            for (MemberID m : p.warriors) {
-                Cell c = m.getCell();
-                
-                if (c.className().equals("Warrior")) {
-                    Warrior w = (Warrior)c;
-                    if (w.health <= 0) {
-                        deadWarriors.add(w);
-                    }
-                }
-            }
-            
-            for (Warrior deadWarrior : deadWarriors)
-                p.warriors.remove(deadWarrior);
-            
-            if (p.warriors.size() == 0) {
-                deadParties.add(p);
-                println("Last Warrior has fallen. Tribe has lost battle.");
-            }
+
+        if (waitForWarriorsToSpawn) {
+            waitForWarriorsToSpawn = false;
+            return this;
         }
-        for (Party deadP : deadParties) 
-            parties.remove(deadP);
-        
-        
-        
-        /*if (parties.size() == 0) {
-        println("Battle at", x, y, "is over. No Tribes have emerged victorious.");
-        return new Cell(false, x, y);
-    }
-        else*/ if (parties.size() == 1) {
-            Tribe t = parties.get(0).tribe;
-            println("Battle at", x, y, "is over. A Tribe has emerged victorious and spawned a new Warrior.");
-            return new Warrior(x, y, t, t.size() / float(t.maxSize) * 3, 3); // where a Battle is won a new Warrior of full health and strength is spawned, in order to continue attacking
-        }
-        
         
         Cell[] nbs = getNeighbours();
+        ArrayList<Tribe> parties = new ArrayList<Tribe>();
+        
         for (Cell c : nbs) {
-            String n = c.className();
+            if (!c.className().equals("Warrior")) continue;
             
-            if (n.equals("Warrior")) {
-                Warrior w = (Warrior)c;
-                boolean notInBattlefield = true;
-                Party ownParty;
-                
-                for (Party p : parties) {
-                    if (p.tribe == w.tribe) {
-                        for (MemberID m : p.warriors) {
-                            if (m.x == w.x && m.y == m.y) {
-                                notInBattlefield = false;
-                                break;
-                            }
-                        }
-                        if (notInBattlefield) { // if Warrior's tribe is found but he isn't in battle, add warrior to party
-                            p.addWarrior(w.x, w.y);
-                            notInBattlefield = false;
-                            break;
-                        }
-                    }
-                    
-                }
-                if (notInBattlefield) { // if variable wans't changed in loop, that means that his party wasn't registered at all and must be added with the warrior
-                    Party p = new Party(w.tribe);
-                    parties.add(p);
-                    p.addWarrior(w.x, w.y);
-                    println("new Tribe with warrior at", w.x, w.y, "joined Battlefield at", x, y);
-                }
-            }
+            Warrior w = (Warrior)c;
+            if (!parties.contains(w.tribe))
+                parties.add(w.tribe);
+        }
+        
+        if (parties.size() == 0) {
             
+            println("Battle at", x, y, "is over. No Tribe has emerged victorious.");
+            return new Cell(false, x, y);
+            
+        } else if (parties.size() == 1) {
+            
+            Tribe t = parties.get(0);
+            println("Battle at", x, y, "is over. A Tribe has emerged victorious and spawned a new Warrior.");
+            return new Warrior(x, y, t, t.size() / float(t.maxSize) * 3, 3); // killer spawns new Warrior in his place because he is the winner of the battle
         }
         
         

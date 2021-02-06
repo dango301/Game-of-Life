@@ -174,17 +174,23 @@ void mousePressed() {
         Cell c = grid[i][j];
         
         println();
-        println("Clicked on Cell:", i, j, c.className(), "#nbs:", grid[i][j].dfs().size());
+        println("Clicked on Cell:", i, j, c.className(), "# Neighbours:", grid[i][j].dfs().size());
+        
         if (c.className().equals("Warrior"))
             println("Health:",((Warrior)c).health);
         
+        
         if (c.className().equals("Battlefield")) {
-            println("Battlefield includes:");
-            for (Party p : ((Battlefield)c).parties) {
-                println("\tTribe", p.tribe, "with following warriors:");
-                for (MemberID m : p.warriors) {
-                    println("\t\tWarrior at", m.x, m.y, "| Health:",((Warrior)m.getCell()).health);
-                }
+            
+            Battlefield b = (Battlefield)c;
+            Cell[] nbs = b.getNeighbours();
+            println("\tBattlefield includes:");
+            
+            for (Cell cc : nbs) {
+                String n = cc.className();
+                if (n.equals("Warrior"))
+                    println("\t\tWarrior at", cc.x, cc.y, "from Tribe",((Warrior)cc).tribe, "| Health:",((Warrior)cc).health);
+                
             }
         }
         
