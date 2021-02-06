@@ -265,11 +265,13 @@ class Tribe {
         if (king != null) {
             Cell k = king.getCell();
             String n = k.className();
-            if (n.equals("TribeMember") && n.equals("Warrior")) {
+
+            if (n.equals("TribeMember") || n.equals("Warrior")) {
                 TribeMember c = (TribeMember)k;
-                if (c.tribe != this)
+                if (c.tribe != this) {
                     this.hasFallenTo = c.tribe;
-                println("King was captured at", king.x, king.y, "and His TribeMembers have fallen to the winning Tribe.");
+                    println("King was captured at", king.x, king.y, "and His TribeMembers have fallen to the winning Tribe.");
+                }
             }
         }
         
