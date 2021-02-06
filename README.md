@@ -2,7 +2,7 @@
 ## Tribe Variation
 ##### written in Processing (Version 3.5.4)
 
-This is an example of the Game of Life with altered rules and additional cell types: _Tribe_, _TribeMember_, _Warrior_ and _Battlefield_, which simulate Cells forming Tribes and going into battle when they clash.
+This is an example of the Game of Life with altered rules and additional cell types such as: _Tribe_, _TribeMember_, _Warrior_ or _Battlefield_, which simulate cells forming tribes and going into battle when they clash until the weaker tribe's King is captured.
 
 
 ### Rules
