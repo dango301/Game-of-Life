@@ -327,7 +327,7 @@ class TribeMember extends Cell{
         
         int directMemberNbs = dfs().size();
         if (directMemberNbs != tribe.size() && directMemberNbs < 3) // TribeMembers that are disconnected from Tribe are killed if less than four in cluster
-        return new Cell(false, x, y);
+            return new Cell(false, x, y);
         
         Cell[] nbs = getNeighbours();
         for (Cell c : nbs) {
@@ -377,11 +377,14 @@ class Warrior extends TribeMember {
         ArrayList<Warrior> previousAttackers = new ArrayList<Warrior>();
         ArrayList<Tribe> enemyTribes = new ArrayList<Tribe>();
         FloatList tribeDamage = new FloatList();
+        boolean noThreat = true;
         
         for (Cell c : nbs) {
             String n = c.className();
             
             if (n.equals("Battlefield")) {
+                
+                noThreat = false;
                 Cell[] participants = ((Battlefield)c).getNeighbours();
                 
                 for (Cell p : participants) {
@@ -412,6 +415,7 @@ class Warrior extends TribeMember {
                 Warrior w = (Warrior)c;
                 if (w.tribe == this.tribe) continue; // don't be attacked by Warriors from same Tribe
                 
+                noThreat = false;
                 if (previousAttackers.contains(w)) {
                     // println("prevented double attack by", w.x, w.y, "at", x, y);
                     continue;
@@ -429,7 +433,7 @@ class Warrior extends TribeMember {
         }
         
         
-        if (enemyTribes.size() == 0) // Warrior becomes normal cell when there are no enemies around
+        if (noThreat) // Warrior becomes normal cell when there are no enemies around
             return new TribeMember(x, y, tribe);
         
         
@@ -467,19 +471,20 @@ class Warrior extends TribeMember {
 
 
 class Battlefield extends Cell {
-    boolean waitForWarriorsToSpawn = true;
+    boolean waitForWarriorsToSpawn;
     
-    Battlefield(int x, int y) {
+    Battlefield(int x, int y, boolean...wait) {
         super(false, x, y);
+        waitForWarriorsToSpawn = wait.length > 0 ? wait[0] : true;
     }
     
     Battlefield clone() {
-        return new Battlefield(x, y);
+        return new Battlefield(x, y, waitForWarriorsToSpawn);
     }
     
     Cell transition() { //FIXME: battlefield not removed when no parties left
         
-        if (waitForWarriorsToSpawn) {
+        if (waitForWarriorsToSpawn) { // wait for one generation so that Battlefield dosn't disappear before Warriors are spawend around it
             waitForWarriorsToSpawn = false;
             return this;
         }
@@ -503,7 +508,7 @@ class Battlefield extends Cell {
         } else if (parties.size() == 1) {
             
             Tribe t = parties.get(0);
-            println("Battle at", x, y, "is over. A Tribe has emerged victorious and spawned a new Warrior.");
+            // println("Battle at", x, y, "is over. A Tribe has emerged victorious and spawned a new Warrior.");
             return new Warrior(x, y, t, t.size() / float(t.maxSize) * 3, 3); // killer spawns new Warrior in his place because he is the winner of the battle
         }
         
