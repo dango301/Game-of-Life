@@ -1,21 +1,21 @@
 # Conway's Game of Life
-## Virus Variation
+## Tribe Variation
 ##### written in Processing (Version 3.5.4)
 
-This is an example of the Game of Life with altered rules and two additional cell types: _Infected_ and _Carcass_, which both carry a virus in this model.
+This is an example of the Game of Life with altered rules and additional cell types: _Tribe_, _TribeMember_, _Warrior_ and _Battlefield_, which simulate Cells forming Tribes and going into battle when they clash.
 
 
 ### Rules
-The standard rules apply. However, every living a cell has a probability (_infectionProb_) of becoming infected, in which case, it will be turned into a cell of the type _Infected_. If there are other cells carrying the virus, each neighbor of a healthy, regular cell has a chance of transferring the virus (_transferProb_).
-
-The _Infected_-Object is initialized with a certain severity and duration characterizing the infection of a given cell. Within the transition function it is specified that its health is reduced by the value of _severity_, but also, its infection is exacerbated by surrounding cells carrying the virus by literally adding to the severity with a likelihood of _transferProb_. In each generation the duration (_dur_) of the infection is decremented. Should the cell die after _dur_ is zero, it will return a normal, live Cell-Object. Otherwise, it returns an infectious Carcass passing on its severity based on one of the three ways it can die:
-1. _health = 0_: infection causes bad health until cell dies and returns Carcass with full severity.
-2. _dur = 0_: at end of infection period cell either dies and leaves carcass with one third of its severity or lives on as normal cell based on _deathProb_
-3. standard rule: death due to under- / overpopulation if not exactly three live neighbors; leaves Carcass with full severity.
-
-The _Carcass_-Object only possesses the properties _severity_ and _dur_ (for how many generations a carcass will stay on the grid before turning into a normal dead cell). Its only purpose is to perhaps infect other _Cell_-Objects or worsen the severity of already infected cells.
-
-
+##### _Cell_ Class
+Normal rules apply for the _Cell_-super. However, using a depth-first search algoritm, a normal _Cell_'s directly connected neighbors are counted (i. e. how many cells are joined together, as opposed to surrounding a cell). The sum must be at least four to form a _Tribe_. _Cell_-Objects, which are directly adjacent to _TribeMembers_ have a chance that is anti-proportinal to the tribe's size to _maxSize_ ratio to become newly born members. Notwithstanding that, it cannot become a new _TribeMember_, if there is a Battlefield in its proximity or its tribe is alreay in battle. That means a tribe's growth is halted completely while it is battling.
+If a normal _Cell_ detects two or more members, each of different tribes, it will be turned into a _Battlefield_-Object, which serves as a field that connects members from different tribes, even if they are not neighbouring cells.
+##### _Tribe_ Class
+A _Tribe_-Object is no cell in the grid and therefore does not extend the _Cell_ class. Instead, it is a structural object holding all _TribeMember_s together in an ArrayList and  holds information about their entity as a whole. For example it calculates the position of the king in the center of mass of a tribe. Whilst _Tribe_ is not a cell, it too has a transition function called _update_, where it examines whether Members were killed / removed by the user painting and, most importantly, checks whether another cell has taken the King's place, meaning the King was captured by an outside _Warrior_. In that case, the entire tribe's members fall to the winning tribe of the battle.
+##### _TribeMember_ Class
+As the brevity of the _TribeMember_ class' _transition_ method suggests members are mostly static. Should one or multiple members be disconnected from the rest of the tribe, it must have at least three neighbours of its kind to sustain itself. Only once a _TribeMember_ encounters a _Battlefield_-Object or a _TribeMember_ of another tribe will the boolean _battleConditions_ be satisfied and spawn a new _Warrior_ in its place.
+##### _Warrior_ Class
+This class further extends _TribeMember_. Due to its specialization it is a _TribeMember_ by definition but also includes properties for its _strength_ and _health_. When a regular member transitions to a _Warrior_, it is initialized with the global user-variable _warriorSpawnHealth_, while its strength is proportinal once again to the tribe's size to _maxSize_ ratio. Moreover, the strength is multiplied by another user-variable called _warriorStrengthMuliplicator_.
+With a length of almost 100 lines, this _transition_ method is the most intricte of all: 
 
 _The standard game can be downloaded from the main branch. Various examples of games with modified rules and additional cell types can be found in the other branches._
 
