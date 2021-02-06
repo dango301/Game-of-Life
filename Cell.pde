@@ -104,7 +104,6 @@ class Cell {
         Tribe _nextTribe = grid[x][y].nextTribe;
         if (_nextTribe != null) { // join tribe that was formed by first member in grid
             TribeMember newC = new TribeMember(x, y, _nextTribe);
-            _nextTribe.addMember(newC);
             return newC;
         }
         
@@ -146,7 +145,6 @@ class Cell {
             
             if (newMemberConditions) {
                 TribeMember newCell = new TribeMember(x, y, t);
-                t.addMember(newCell);
                 // println("New Tribe Member spawned at", x, y);
                 return newCell;
             } else {
@@ -158,7 +156,7 @@ class Cell {
             default : // if there are multiple Tribes surrounding this cell, it becomes a Battlefield
             for (Tribe nbsTribe : tribeNbs)
                 nbsTribe.inBattle = true;
-            println("Tribes going to war at", x, y);
+            // println("Tribes going to war at", x, y);
             return new Battlefield(x, y);
         }
         
@@ -173,7 +171,6 @@ class Cell {
                 
                 Tribe newTribe = new Tribe();
                 TribeMember newCell = new TribeMember(x, y, newTribe);
-                newTribe.addMember(newCell);
                 
                 for (Cell c : directNbs)
                     grid[c.x][c.y].nextTribe = newTribe; // change property in original grid (this method is not recommended at all, though!) so following cells can join that tribe instead of creating a new one
@@ -235,7 +232,7 @@ class Tribe {
         
         for (MemberID m : members) {
             if (m.x == member.x && m.y == member.y) {
-                println("MemberID was not added to Tribe because it is already registered for TribeMember at", member.x, member.y);
+                // println("MemberID was not added to Tribe because it is already registered for TribeMember at", member.x, member.y);
                 return;
             }
         }
@@ -264,17 +261,31 @@ class Tribe {
     
     void update() { // remove all TribeMembers that were killed / removed in the previous generation
         ArrayList<MemberID> deletedMembers = new ArrayList<MemberID>();
+        boolean warriorsInTribe = false;
+        
         for (MemberID m : members) {
-            String n = m.getCell().className();
-            if (!n.equals("TribeMember") && !n.equals("Warrior"))
+            Cell c = m.getCell();
+            String n = c.className();
+            
+            if (n.equals("Cell") || n.equals("Battlefield")) {
                 deletedMembers.add(m);
+            } else if (n.equals("TribeMember") || n.equals("Warrior")) {
+                TribeMember cc = (TribeMember)c;
+                if (cc.tribe != this)
+                    deletedMembers.add(m);
+                else if (n.equals("Warrior"))
+                    warriorsInTribe = true;
+            }
         }
+        inBattle = warriorsInTribe;
         
         for (MemberID m : deletedMembers)
             removeMember(m.x, m.y);
     }
     
     MemberID king() { // determine which cell is king of tribe and display it
+        if (this.size() == 0) return null;
+        
         int xSum = 0; 
         int ySum = 0; 
         
@@ -305,6 +316,7 @@ class TribeMember extends Cell{
     TribeMember(int x, int y, Tribe tribe) {
         super(true, x, y);
         this.tribe = tribe;
+        tribe.addMember(this);
     }
     
     TribeMember clone() {
@@ -312,14 +324,18 @@ class TribeMember extends Cell{
     }
     
     Cell transition() {
-        Cell[] nbs = getNeighbours();
         
+        int directMemberNbs = dfs().size();
+        if (directMemberNbs != tribe.size() && directMemberNbs < 3) // TribeMembers that are disconnected from Tribe are killed if less than four in cluster
+        return new Cell(false, x, y);
+        
+        Cell[] nbs = getNeighbours();
         for (Cell c : nbs) {
             String n = c.className();
             
             boolean battleConditions = // Warrior is spawned, if there is a Battlefield or TribeMember / Warrior of a different Tribe
-            n.equals("Battlefield")
-                || ((n.equals("TribeMember") || n.equals("Warrior")) && ((TribeMember)c).tribe != this.tribe);
+            n.equals("Battlefield");
+            // || ((n.equals("TribeMember") || n.equals("Warrior")) && ((TribeMember)c).tribe != this.tribe);
             
             if (battleConditions)
                 return new Warrior(x, y, tribe, tribe.size() / float(tribe.maxSize) * 3, 3);
@@ -413,6 +429,10 @@ class Warrior extends TribeMember {
         }
         
         
+        if (enemyTribes.size() == 0) // Warrior becomes normal cell when there are no enemies around
+            return new TribeMember(x, y, tribe);
+        
+        
         for (Float damage : tribeDamage)
             health -= damage;
         
@@ -435,7 +455,7 @@ class Warrior extends TribeMember {
         stroke(0);
         strokeWeight(gridWeight);
         fill(0);
-        rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight); // draw black box under rect for darker cell from alpha effect
+        rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight); // draw blacked out box under rect for darker cell from alpha effect
         
         fill(tribe.col, 150 + 105 * health / maxHealth);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
@@ -457,8 +477,8 @@ class Battlefield extends Cell {
         return new Battlefield(x, y);
     }
     
-    Cell transition() {
-
+    Cell transition() { //FIXME: battlefield not removed when no parties left
+        
         if (waitForWarriorsToSpawn) {
             waitForWarriorsToSpawn = false;
             return this;

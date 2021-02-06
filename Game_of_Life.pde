@@ -1,7 +1,7 @@
 // User Variables
 float res = 20; //dimensions of each cell in px //rename to resolution in the end
 float margin = 8;  // margin on each side of the screen
-float maxHz = 2500;
+float maxHz = 50;
 float gridWeight = 0.25; // min of .01 to prevent strange behaviour
 
 
@@ -174,7 +174,7 @@ void mousePressed() {
         Cell c = grid[i][j];
         
         println();
-        println("Clicked on Cell:", i, j, c.className(), "# Neighbours:", grid[i][j].dfs().size());
+        println("Clicked on Cell:", i, j, c.className(), "| #Neighbours:", grid[i][j].dfs().size());
         
         if (c.className().equals("Warrior"))
             println("Health:",((Warrior)c).health);
@@ -194,7 +194,7 @@ void mousePressed() {
             }
         }
         
-        
+
         return;
     }
     

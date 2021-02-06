@@ -1,9 +1,8 @@
 
 void nextGeneration() {
-    nextGrid = new Cell[cols][rows];
     
-    for (Tribe t : allTribes)
-        t.update();
+    nextGrid = new Cell[cols][rows];
+    for (Tribe t : allTribes) t.update();
     
     
     for (int i = 0; i < cols; i++) {
@@ -17,9 +16,7 @@ void nextGeneration() {
     }
     
     
-    for (Tribe t : allTribes)
-        t.king();
-    
+    for (Tribe t : allTribes) t.king();
     grid = nextGrid;
     gen++;
 }
@@ -151,13 +148,25 @@ void drawInitialGrid(boolean dragged) {
     if (i >= cols || j >= rows) return;
     
     Cell oldCell = grid[i][j];
+    boolean redrawMembers = false;
     if (oldCell.className().equals("TribeMember") || oldCell.className().equals("Warrior")) {
-        TribeMember cc = (TribeMember)oldCell;
-        cc.tribe.removeMember(cc.x, cc.y);
+        redrawMembers = true;
     }
     
     Cell c = new Cell(mouseButton == LEFT, i, j);
     grid[i][j] = c;
+    
+    if (redrawMembers) {
+        for (Tribe t : allTribes) {
+            t.update();
+            
+            for (MemberID m : t.members)
+                ((TribeMember)m.getCell()).display();
+            
+            t.king();
+        }
+    }
+    
     c.display();
 }
 
