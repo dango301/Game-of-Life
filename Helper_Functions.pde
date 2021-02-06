@@ -1,8 +1,18 @@
+ArrayList<Tribe> deletedTribes = new ArrayList<Tribe>();
 
 void nextGeneration() {
-    
     nextGrid = new Cell[cols][rows];
-    for (Tribe t : allTribes) t.update();
+    
+    for (Tribe t : deletedTribes)
+        allTribes.remove(t);
+    
+    
+    for (Tribe t : allTribes) {
+        t.update();
+        if (t.size() == 0)
+            deletedTribes.add(t);
+    }
+    
     
     
     for (int i = 0; i < cols; i++) {
@@ -15,8 +25,6 @@ void nextGeneration() {
         }
     }
     
-    
-    for (Tribe t : allTribes) t.king();
     grid = nextGrid;
     gen++;
 }
@@ -159,11 +167,8 @@ void drawInitialGrid(boolean dragged) {
     if (redrawMembers) {
         for (Tribe t : allTribes) {
             t.update();
-            
             for (MemberID m : t.members)
-                ((TribeMember)m.getCell()).display();
-            
-            t.king();
+               ((TribeMember)m.getCell()).display();
         }
     }
     

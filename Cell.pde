@@ -216,12 +216,13 @@ class MemberID {
 
 
 class Tribe {
-    int maxSize = 200;
+    int maxSize = maxTribeSize;
     ArrayList<MemberID> members = new ArrayList<MemberID>();
     MemberID king;
     color col;
     float minColorValue = 75;
     boolean inBattle = false;
+    Tribe hasFallenTo = null;
     
     Tribe(color...col) {
         this.col = col.length > 0 ? col[0] : color(random(minColorValue, 255), random(minColorValue, 255), random(minColorValue, 255));
@@ -260,6 +261,18 @@ class Tribe {
     }
     
     void update() { // remove all TribeMembers that were killed / removed in the previous generation
+        
+        if (king != null) {
+            Cell k = king.getCell();
+            String n = k.className();
+            if (n.equals("TribeMember") && n.equals("Warrior")) {
+                TribeMember c = (TribeMember)k;
+                if (c.tribe != this)
+                    this.hasFallenTo = c.tribe;
+                println("King was captured at", king.x, king.y, "and His TribeMembers have fallen to the winning Tribe.");
+            }
+        }
+        
         ArrayList<MemberID> deletedMembers = new ArrayList<MemberID>();
         boolean warriorsInTribe = false;
         
@@ -281,10 +294,12 @@ class Tribe {
         
         for (MemberID m : deletedMembers)
             removeMember(m.x, m.y);
+        
+        king();
     }
     
-    MemberID king() { // determine which cell is king of tribe and display it
-        if (this.size() == 0) return null;
+    void king() { // determine which cell is king of tribe and display it
+        if (this.size() == 0) return;
         
         int xSum = 0; 
         int ySum = 0; 
@@ -300,12 +315,9 @@ class Tribe {
         FloatList distances = new FloatList();
         for (MemberID m : members)
             distances.append(sqrt(sq(m.x - xAvg) + sq(m.y - yAvg))); // using Pythagoras theorem to find closest cell to center of mass of entire tribe
+        
         int index = distances.index(distances.min());
-        
-        
         king = members.get(index);
-        shape(crown,  king.x * res + offsetX, king.y * res + offsetY + 40, res - gridWeight, res - gridWeight);
-        return king;
     }
 }
 
@@ -325,6 +337,11 @@ class TribeMember extends Cell{
     
     Cell transition() {
         
+        if (tribe.hasFallenTo != null) {
+            return new TribeMember(x, y, tribe.hasFallenTo);
+        }
+        
+        
         int directMemberNbs = dfs().size();
         if (directMemberNbs != tribe.size() && directMemberNbs < 3) // TribeMembers that are disconnected from Tribe are killed if less than four in cluster
             return new Cell(false, x, y);
@@ -334,11 +351,11 @@ class TribeMember extends Cell{
             String n = c.className();
             
             boolean battleConditions = // Warrior is spawned, if there is a Battlefield or TribeMember / Warrior of a different Tribe
-            n.equals("Battlefield");
-            // || ((n.equals("TribeMember") || n.equals("Warrior")) && ((TribeMember)c).tribe != this.tribe);
+            n.equals("Battlefield")
+                || ((n.equals("TribeMember") || n.equals("Warrior")) && ((TribeMember)c).tribe != this.tribe);
             
             if (battleConditions)
-                return new Warrior(x, y, tribe, tribe.size() / float(tribe.maxSize) * 3, 3);
+                return new Warrior(x, y, tribe, tribe.size() / float(tribe.maxSize) * warriorStrengthMuliplicator, warriorSpawnHealth);
         }
         
         
@@ -351,6 +368,10 @@ class TribeMember extends Cell{
         stroke(0);
         strokeWeight(gridWeight);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
+        
+        MemberID k = tribe.king;
+        if (k != null && k.x == x && k.y == y)
+            shape(crown,  k.x * res + offsetX, k.y * res + offsetY + 40, res - gridWeight, res - gridWeight);
     }
 }
 
@@ -372,6 +393,11 @@ class Warrior extends TribeMember {
     }
     
     Cell transition() {
+        
+        if (tribe.hasFallenTo != null) {
+            return new TribeMember(x, y, tribe.hasFallenTo);
+        }
+        
         
         Cell[] nbs = getNeighbours();
         ArrayList<Warrior> previousAttackers = new ArrayList<Warrior>();
@@ -446,7 +472,7 @@ class Warrior extends TribeMember {
             Tribe t = enemyTribes.get(index);
             
             // println("Warrior has fallen and a new Warrior of the winning Tribe has taken his place to continue into battle at", x, y);
-            return new Warrior(x, y, t, t.size() / float(t.maxSize) * 3, 3); // killer spawns new Warrior in his place because he is the winner of the battle
+            return new Warrior(x, y, t, t.size() / float(t.maxSize) * warriorStrengthMuliplicator * random(2, warriorWinnerRandomMultiplier), warriorSpawnHealth); // killer spawns new Warrior in his place because he is the winner of the battle
         }
         
         
@@ -463,8 +489,12 @@ class Warrior extends TribeMember {
         
         fill(tribe.col, 150 + 105 * health / maxHealth);
         rect(x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
-        
         shape(helmet, x * res + offsetX, y * res + offsetY + 40, res - gridWeight, res - gridWeight);
+        
+        
+        MemberID k = tribe.king;
+        if (k != null && k.x == x && k.y == y)
+            shape(crown,  k.x * res + offsetX, k.y * res + offsetY + 40, res - gridWeight, res - gridWeight);
     }
 }
 
@@ -482,7 +512,7 @@ class Battlefield extends Cell {
         return new Battlefield(x, y, waitForWarriorsToSpawn);
     }
     
-    Cell transition() { //FIXME: battlefield not removed when no parties left
+    Cell transition() {
         
         if (waitForWarriorsToSpawn) { // wait for one generation so that Battlefield dosn't disappear before Warriors are spawend around it
             waitForWarriorsToSpawn = false;
@@ -509,7 +539,7 @@ class Battlefield extends Cell {
             
             Tribe t = parties.get(0);
             // println("Battle at", x, y, "is over. A Tribe has emerged victorious and spawned a new Warrior.");
-            return new Warrior(x, y, t, t.size() / float(t.maxSize) * 3, 3); // killer spawns new Warrior in his place because he is the winner of the battle
+            return new Warrior(x, y, t, t.size() / float(t.maxSize) * warriorStrengthMuliplicator * random(2, warriorWinnerRandomMultiplier), warriorSpawnHealth); // killer spawns new Warrior in his place because he is the winner of the battle
         }
         
         

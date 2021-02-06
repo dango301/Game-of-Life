@@ -2,7 +2,11 @@
 float res = 20; //dimensions of each cell in px //rename to resolution in the end
 float margin = 8;  // margin on each side of the screen
 float maxHz = 50;
-float gridWeight = 0.25; // min of .01 to prevent strange behaviour
+float gridWeight = 0.1; // min of .01 to prevent strange behaviour
+int maxTribeSize = 350;
+float warriorStrengthMuliplicator = 2;
+float warriorSpawnHealth = 8;
+float warriorWinnerRandomMultiplier = 5;
 
 
 // Private Variables
