@@ -1,10 +1,3 @@
-float infectionProb = 0.05;
-float transferProb = 0.5;
-float deathProb = 0.125;
-float spawnSev = 0.5;
-int spawnDur = 4;
-float maxSev = 3;
-float healingRate = 1 / 3;
 
 
 class Cell {

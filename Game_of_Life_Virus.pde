@@ -4,6 +4,14 @@ float margin = 8;  // margin on each side of the screen
 float maxHz = 2500;
 float gridWeight = 0.25; // min of .01 to prevent strange behaviour
 
+float infectionProb = 0.05;
+float transferProb = 0.5;
+float deathProb = 0.125;
+float spawnSev = 0.5;
+int spawnDur = 4;
+float maxSev = 3;
+float healingRate = 1 / 3;
+
 
 // Private Variables
 int cols = - 1;
@@ -25,7 +33,7 @@ long gen = 0;
 
 void setup() {
     size(800, 600);
-
+    
     
     surface.setTitle("\"The Game of Life\" by Dennis Paust  © 2021");
     surface.setLocation(0, 0);
@@ -93,14 +101,11 @@ void mySetup(boolean initialSetup) {
         rows = floor((height - 40 - 2 * margin) / res);
         grid = new Cell[cols][rows];
         nextGrid = new Cell[cols][rows];
-        
-        offsetX = ((width - 2 * margin) % res) / 2 + margin;
-        offsetY = ((height - 40 - 2 * margin) % res) / 2 + margin;
         println("Grid-Ratio: " + cols + " x " + rows);
-    } else {
-        offsetX = (width - (cols * res + 2 * margin)) / 2 + margin;
-        offsetY = (height - (40 + rows * res + 2 * margin)) / 2 + margin;
-    }
+    } 
+    offsetX = (width - (cols * res + 2 * margin)) / 2 + margin;
+    offsetY = (height - (40 + rows * res + 2 * margin)) / 2 + margin;
+    gen = 0;
     
     fill(255);
     stroke(0);
@@ -111,7 +116,6 @@ void mySetup(boolean initialSetup) {
             if (initialSetup)
                 grid[i][j] = new Cell(false, i, j);
             
-            nextGrid[i][j] = new Cell(false, i, j);
             grid[i][j].display();
         }
     }
@@ -146,7 +150,7 @@ void keyPressed() {
         toggleLoop(false);
         nextGeneration();
     } else if (key == 'q') {
-        println("User ended Game after " + gen + " Generations.");
+        println("\nUser ended Game after " + gen + " Generations.");
         exit();
     }
 }
