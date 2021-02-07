@@ -1,6 +1,3 @@
-// Icons designed by Freepik from www.flaticon.com
-//TODO: put icon attirbution in readme
-//TODO: when king cell is killed destroy entire tribe and delelte it from allTribes[]; only a half of enemy tribe's cells will be added to winning tribe, others die as if destroyed by the war; restore health of all warriors
 
 
 class Cell {

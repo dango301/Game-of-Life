@@ -26,6 +26,8 @@ Warriors are displayed with a special icon of a soldier's helmet drawn above the
 ##### Battlefield Class
 Beyond its super the _Battlefield_ class has no new function. It merely acts as a distinction between a normal _Cell_ in order to connect enemy warriors through the _Battlefield's_ neighbors. What's more, it transitions into a new _Warrior_ with properties determined just like in the _Warrior_ class as described above once there is only one remaining party (i.e. warrior(s) from the same tribe) in its vicinity. In the unlikely case in which both parties eliminate each other simultaneously it returns a dead _Cell_-Object. _Battlefield_ cells are dead by definition and represented with two crossing swords over white.
 
+############################ Icons designed by Freepik from www.flaticon.com
+
 
 _The standard game can be downloaded from the main branch. Various examples of games with modified rules and additional cell types can be found in the other branches._
 

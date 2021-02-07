@@ -28,9 +28,11 @@ long gen = 0;
 
 // Specific to the Tribe-Variation of the game:
 ArrayList<Tribe> allTribes = new ArrayList<Tribe>();
+ArrayList<Tribe> deletedTribes = new ArrayList<Tribe>();
 PShape crown;
 PShape helmet;
 PShape swords;
+// Icons designed by Freepik from www.flaticon.com
 
 
 void setup() {
@@ -113,6 +115,9 @@ void mySetup(boolean initialSetup) {
     } else {
         offsetX = (width - (cols * res + 2 * margin)) / 2 + margin;
         offsetY = (height - (40 + rows * res + 2 * margin)) / 2 + margin;
+        
+        allTribes = new ArrayList<Tribe>();
+        deletedTribes = new ArrayList<Tribe>();
     }
     
     fill(255);

@@ -1,4 +1,4 @@
-ArrayList<Tribe> deletedTribes = new ArrayList<Tribe>();
+
 
 void nextGeneration() {
     nextGrid = new Cell[cols][rows];
@@ -168,7 +168,7 @@ void drawInitialGrid(boolean dragged) {
         for (Tribe t : allTribes) {
             t.update();
             for (MemberID m : t.members)
-               ((TribeMember)m.getCell()).display();
+                ((TribeMember)m.getCell()).display();
         }
     }
     
