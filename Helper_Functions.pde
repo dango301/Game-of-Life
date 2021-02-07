@@ -27,9 +27,15 @@ void fileImported(File selection) {
         println("Window was closed or the user hit cancel.");
         return;
     }
-    
-    isImporting = true;
+
+    String path = selection.getAbsolutePath();
     println("User selected " + selection.getAbsolutePath());
+    if (!split(path, ".")[1].equals("json")) {
+        println("File could not be imported. Please select a file of type '.json'");
+        return;
+    }
+
+    isImporting = true;
     JSONArray values = loadJSONArray(selection.getAbsolutePath());
     
     if (values.size() != cols * rows) {

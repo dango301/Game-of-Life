@@ -143,7 +143,7 @@ void keyPressed() {
         toggleLoop(false);
         nextGeneration();
     } else if (key == 'q') {
-        println("User ended Game after " + gen + " Generations.");
+        println("\nUser ended Game after " + gen + " Generations.");
         exit();
     }
 }
