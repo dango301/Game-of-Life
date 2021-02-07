@@ -29,14 +29,14 @@ void fileImported(File selection) {
     }
 
     String path = selection.getAbsolutePath();
-    println("User selected " + selection.getAbsolutePath());
+    println("User selected " + path);
     if (!split(path, ".")[1].equals("json")) {
         println("File could not be imported. Please select a file of type '.json'");
         return;
     }
 
     isImporting = true;
-    JSONArray values = loadJSONArray(selection.getAbsolutePath());
+    JSONArray values = loadJSONArray(path);
     
     if (values.size() != cols * rows) {
         
