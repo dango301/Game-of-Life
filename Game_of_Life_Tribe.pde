@@ -108,17 +108,15 @@ void mySetup(boolean initialSetup) {
         rows = floor((height - 40 - 2 * margin) / res);
         grid = new Cell[cols][rows];
         nextGrid = new Cell[cols][rows];
-        
-        offsetX = ((width - 2 * margin) % res) / 2 + margin;
-        offsetY = ((height - 40 - 2 * margin) % res) / 2 + margin;
         println("Grid-Ratio: " + cols + " x " + rows);
-    } else {
-        offsetX = (width - (cols * res + 2 * margin)) / 2 + margin;
-        offsetY = (height - (40 + rows * res + 2 * margin)) / 2 + margin;
-        
-        allTribes = new ArrayList<Tribe>();
-        deletedTribes = new ArrayList<Tribe>();
     }
+    offsetX = (width - (cols * res + 2 * margin)) / 2 + margin;
+    offsetY = (height - (40 + rows * res + 2 * margin)) / 2 + margin;
+    gen = 0;
+    
+    allTribes = new ArrayList<Tribe>();
+    deletedTribes = new ArrayList<Tribe>();
+    
     
     fill(255);
     stroke(0);
@@ -129,7 +127,6 @@ void mySetup(boolean initialSetup) {
             if (initialSetup)
                 grid[i][j] = new Cell(false, i, j);
             
-            nextGrid[i][j] = new Cell(false, i, j);
             grid[i][j].display();
         }
     }
@@ -164,7 +161,7 @@ void keyPressed() {
         toggleLoop(false);
         nextGeneration();
     } else if (key == 'q') {
-        println("User ended Game after " + gen + " Generations.");
+        println("\nUser ended Game after " + gen + " Generations.");
         exit();
     }
 }
@@ -203,7 +200,7 @@ void mousePressed() {
             }
         }
         
-
+        
         return;
     }
     

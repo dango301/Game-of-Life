@@ -38,9 +38,15 @@ void fileImported(File selection) {
         return;
     }
     
+    String path = selection.getAbsolutePath();
+    println("User selected " + path);
+    if (!split(path, ".")[1].equals("json")) {
+        println("File could not be imported. Please select a file of type '.json'");
+        return;
+    }
+
     isImporting = true;
-    println("User selected " + selection.getAbsolutePath());
-    JSONArray values = loadJSONArray(selection.getAbsolutePath());
+    JSONArray values = loadJSONArray(path);
     
     if (values.size() != cols * rows) {
         
@@ -95,7 +101,6 @@ void fileExported(File selection) {
                 Cell cell = grid[i][j];
                 JSONObject obj = new JSONObject();
                 
-                obj.setInt("id", index);
                 obj.setInt("x", cell.x);
                 obj.setInt("y", cell.y);
                 obj.setBoolean("alive", cell.alive);
