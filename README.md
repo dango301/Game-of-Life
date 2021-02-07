@@ -1,7 +1,7 @@
 # Conway's Game of Life
 ##### written in Processing (Version 3.5.4)
 
-Changing Conway's original rules and creating new cell types is possible and encouraged. The code is written as to make modifications to the standard rule sets as well as the creation of new classes for new cell types as easy as possible.
+Changing [Conway's original rules](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules "Wikipedia: Conway's Game of Life - Rules") and creating new cell types is possible and encouraged. The code is written as to make modifications to the standard rule sets as well as the creation of new classes for new cell types as easy as possible.
 At the moment, the Cell class only keeps track of the states alive / dead. To add further sub-classes, they must extend the super, _Cell_.
 
 **In each sub-class one can override three methods: clone, transition and display**
