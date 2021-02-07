@@ -93,14 +93,12 @@ void mySetup(boolean initialSetup) {
         rows = floor((height - 40 - 2 * margin) / res);
         grid = new Cell[cols][rows];
         nextGrid = new Cell[cols][rows];
-        
-        offsetX = ((width - 2 * margin) % res) / 2 + margin;
-        offsetY = ((height - 40 - 2 * margin) % res) / 2 + margin;
         println("Grid-Ratio: " + cols + " x " + rows);
-    } else {
-        offsetX = (width - (cols * res + 2 * margin)) / 2 + margin;
-        offsetY = (height - (40 + rows * res + 2 * margin)) / 2 + margin;
     }
+    
+    offsetX = (width - (cols * res + 2 * margin)) / 2 + margin;
+    offsetY = (height - (40 + rows * res + 2 * margin)) / 2 + margin;
+    gen = 0;
     
     fill(255);
     stroke(0);
@@ -111,7 +109,6 @@ void mySetup(boolean initialSetup) {
             if (initialSetup)
                 grid[i][j] = new Cell(false, i, j);
             
-            nextGrid[i][j] = new Cell(false, i, j);
             grid[i][j].display();
         }
     }

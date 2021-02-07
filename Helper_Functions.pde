@@ -85,7 +85,6 @@ void fileExported(File selection) {
                 Cell cell = grid[i][j];
                 JSONObject obj = new JSONObject();
                 
-                obj.setInt("id", index);
                 obj.setInt("x", cell.x);
                 obj.setInt("y", cell.y);
                 obj.setBoolean("alive", cell.alive);
